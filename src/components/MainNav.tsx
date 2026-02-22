@@ -1,14 +1,12 @@
-import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import PaperMintLogo from '../assets/PaperMintLogo.png'
+import PaperMintLogo from '../assets/PaperMintLogoBlack.png'
 import { Button } from './ui/button'
 
-export default function Navbar() {
-    const navigate = useNavigate()
+export default function MainNav() {
     const [isOpen, setIsOpen] = useState(false)
 
     return (
-        <nav className='w-full px-6 md:px-10 py-6'>
+        <nav className='w-full px-6 md:px-10 py-3 bg-[#FAFAFA] shadow-md'>
             <div className='flex justify-between items-center'>
 
                 {/* Logo */}
@@ -17,33 +15,23 @@ export default function Navbar() {
                 {/* Desktop Menu */}
                 <ul className='hidden md:flex items-center font-medium text-[18px]'>
                     <li>
-                        <Link to="/" className='px-3 py-2 mx-3 text-white hover:border-b-2 border-[#7592BB]'>
-                            Home
-                        </Link>
+                        <input
+                            className="mx-3 py-2 bg-[#D9D9D9] text-[#394354] placeholder:text-[#394354] px-3 text-sm rounded-lg w-72"
+                            type="text"
+                            placeholder="Search Designs"
+                        />
                     </li>
                     <li>
-                        <Link to="/about" className='px-3 py-2 mx-3 text-white hover:border-b-2 border-[#7592BB]'>
-                            About Us
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/services" className='px-3 py-2 mx-3 text-white hover:border-b-2 border-[#7592BB]'>
-                            Services
-                        </Link>
-                    </li>
-                    <li>
-                        <Button
-                            onClick={() => navigate('/explore')}
-                            className='bg-gradient-to-r from-[#7592BB] via-[#83A1CD] to-[#87A6D3] text-[#162446]'
-                        >
-                            Get Started
+                        <Button className='bg-[#319BD9] hover:bg-[#5399fb] text-white pl-3 pr-4 text-base'>
+                            <i className="fa-solid fa-plus mr-2"></i>
+                            Add Design
                         </Button>
                     </li>
                 </ul>
 
                 {/* Hamburger Button */}
                 <button
-                    className='md:hidden text-white'
+                    className='md:hidden text-[#394354]'
                     onClick={() => setIsOpen(!isOpen)}
                 >
                     <svg
@@ -74,18 +62,18 @@ export default function Navbar() {
 
             {/* Mobile Menu */}
             {isOpen && (
-                <div className='md:hidden mt-4 flex flex-col items-center bg-[#1e293b] rounded-lg py-4 space-y-4 text-white'>
-                    <Link to="/" onClick={() => setIsOpen(false)}>Home</Link>
-                    <Link to="/about" onClick={() => setIsOpen(false)}>About Us</Link>
-                    <Link to="/services" onClick={() => setIsOpen(false)}>Services</Link>
+                <div className='md:hidden mt-4 flex flex-col items-center bg-white rounded-lg py-4 space-y-4 shadow-md'>
+                    <input
+                        className="py-2 bg-[#D9D9D9] text-[#394354] placeholder:text-[#394354] px-3 text-sm rounded-lg w-11/12"
+                        type="text"
+                        placeholder="Search Designs"
+                    />
                     <Button
-                        onClick={() => {
-                            navigate('/explore')
-                            setIsOpen(false)
-                        }}
-                        className='bg-gradient-to-r from-[#7592BB] via-[#83A1CD] to-[#87A6D3] text-[#162446]'
+                        className='bg-[#319BD9] hover:bg-[#5399fb] text-white px-6 text-base'
+                        onClick={() => setIsOpen(false)}
                     >
-                        Get Started
+                        <i className="fa-solid fa-plus mr-2"></i>
+                        Add Design
                     </Button>
                 </div>
             )}
