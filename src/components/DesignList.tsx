@@ -4,14 +4,12 @@ import { Badge } from './ui/badge'
 
 export default function DesignList() {
     return (
-        <ul className="grid gap-12 px-4 py-4 
-  grid-cols-1 
-  sm:grid-cols-[repeat(auto-fit,minmax(380px,2fr))]">
+        <ul className="grid gap-12 px-4 py-4 grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(380px,2fr))]">
             <li>
                 <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                     <img
-                        src="../../designs/ecashNote1.png"
+                        src="/Paper-Ecash/designs/ecashNote1.png"
                         alt="Design cover"
                         className="aspect-video w-full object-cover"
                     />
@@ -22,7 +20,7 @@ export default function DesignList() {
                         </CardDescription>
                         <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
                             <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Branded
+                            Community
                         </Badge>
                     </CardHeader>
                     <CardFooter>
@@ -36,7 +34,7 @@ export default function DesignList() {
                 <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                     <img
-                        src="../../designs/ecashNote2.png"
+                        src="/Paper-Ecash/designs/ecashNote2.png"
                         alt="Design cover"
                         className="aspect-video w-full object-cover"
                     />
@@ -47,7 +45,7 @@ export default function DesignList() {
                         </CardDescription>
                         <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
                             <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Branded
+                            Community
                         </Badge>
                     </CardHeader>
                     <CardFooter>
@@ -61,7 +59,7 @@ export default function DesignList() {
                 <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                     <img
-                        src="../../designs/ecashNote1.png"
+                        src="/Paper-Ecash/designs/ecashNote1.png"
                         alt="Design cover"
                         className="aspect-video w-full object-cover"
                     />
@@ -72,7 +70,7 @@ export default function DesignList() {
                         </CardDescription>
                         <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
                             <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Branded
+                            Community
                         </Badge>
                     </CardHeader>
                     <CardFooter>
@@ -86,7 +84,7 @@ export default function DesignList() {
                 <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                     <img
-                        src="../../designs/ecashNote2.png"
+                        src="/Paper-Ecash/designs/ecashNote2.png"
                         alt="Design cover"
                         className="aspect-video w-full object-cover"
                     />
@@ -97,7 +95,7 @@ export default function DesignList() {
                         </CardDescription>
                         <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
                             <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Branded
+                            Community
                         </Badge>
                     </CardHeader>
                     <CardFooter>
@@ -111,7 +109,7 @@ export default function DesignList() {
                 <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                     <img
-                        src="../../designs/ecashNote1.png"
+                        src="/Paper-Ecash/designs/ecashNote1.png"
                         alt="Design cover"
                         className="aspect-video w-full object-cover"
                     />
@@ -122,7 +120,7 @@ export default function DesignList() {
                         </CardDescription>
                         <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
                             <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Branded
+                            Community
                         </Badge>
                     </CardHeader>
                     <CardFooter>
@@ -136,7 +134,7 @@ export default function DesignList() {
                 <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                     <img
-                        src="../../designs/ecashNote2.png"
+                        src="/Paper-Ecash/designs/ecashNote2.png"
                         alt="Design cover"
                         className="aspect-video w-full object-cover"
                     />
@@ -147,7 +145,7 @@ export default function DesignList() {
                         </CardDescription>
                         <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
                             <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Branded
+                            Community
                         </Badge>
                     </CardHeader>
                     <CardFooter>

@@ -9,7 +9,7 @@ import { store } from './redux/store.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
+      <BrowserRouter basename="/Paper-Ecash">
         <App />
       </BrowserRouter>
     </Provider>

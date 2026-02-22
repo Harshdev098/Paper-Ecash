@@ -168,7 +168,7 @@ export default function Home() {
           <div className="relative flex">
             {/* LEFT SIDE - Desktop Progress Rail */}
             <div className="hidden md:flex relative w-1/3">
-              <div className="sticky top-0 h-screen flex justify-center">
+              <div className="sticky top-24 flex justify-center">
                 <div className="relative flex flex-col items-center h-full py-24">
 
                   {/* Background line */}

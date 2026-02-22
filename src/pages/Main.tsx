@@ -73,11 +73,11 @@ export default function Main() {
                             <TooltipTrigger asChild>
                                 <Badge className="bg-green-50 text-green-700 hover:bg-green-200">
                                     <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                                    Branded
+                                    Community
                                 </Badge>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>Organization branding</p>
+                                <p>Community edition</p>
                             </TooltipContent>
                         </Tooltip>
 
