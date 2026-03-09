@@ -23,7 +23,7 @@ export default function MainNav() {
                     </li>
                     <li>
                         <Button className='bg-[#319BD9] hover:bg-[#5399fb] text-white pl-3 pr-4 text-base'>
-                            <i className="fa-solid fa-plus mr-2"></i>
+                            <i className="fa-solid fa-plus"></i>
                             Add Design
                         </Button>
                     </li>

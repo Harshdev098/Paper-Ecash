@@ -1,7 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
+import DesignSlice from "./slices/DesignSlice";
+import SessionSlice from "./slices/SessionSlice";
+// import NoteSlice from "./slices/NoteSlice";
 
 export const store= configureStore({
-    reducer:{},
+    reducer:{
+        choosenDesign:DesignSlice,
+        SessionSlice:SessionSlice,
+    },
     
 })
 

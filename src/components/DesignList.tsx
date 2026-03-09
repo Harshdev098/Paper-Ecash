@@ -1,160 +1,94 @@
 import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
+import { labelConfig } from '@/utils/label'
+import { clearChoosenDesign, setChoosenDesign } from '@/redux/slices/DesignSlice'
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '../redux/store';
+import type { Design } from '@/types/init.type'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from './ui/empty'
+import DesignDetails from './DesignDetails'
 
-export default function DesignList() {
+
+export default function DesignList({ filteredDesigns }: { filteredDesigns: Design[] }) {
+    const choosenDesign=useSelector((state: RootState) => state.choosenDesign)
+    const dispatch = useDispatch<AppDispatch>();
+
+    const selectDesign = (design: Design) => {
+        console.log('the choosen design data is', design)
+        dispatch(setChoosenDesign(design))
+    }
     return (
-        <ul className="grid gap-12 px-4 py-4 grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(380px,2fr))]">
-            <li>
-                <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
+        <>
+            {filteredDesigns.length === 0 && <Empty className='min-h-[600px]'>
+                <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                        <i className="fa-solid fa-file-pen"></i>
+                    </EmptyMedia>
+                    <EmptyTitle>No Created Ecash Found</EmptyTitle>
+                    <EmptyDescription>
+                        Get started by creating your first paper ecash.
+                    </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent className="flex-row justify-center gap-2">
+                    <Button className='bg-[#319BD9] hover:bg-[#5399fb]'>Use own Design</Button>
+                </EmptyContent>
+            </Empty>}
+            <ul className="grid gap-12 px-4 py-4 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,420px))] justify-center">
+                {filteredDesigns.map((design, index) => {
+                    return (
+                        <li key={index}>
+                            <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
-                    <img
-                        src="/Paper-Ecash/designs/ecashNote1.png"
-                        alt="Design cover"
-                        className="aspect-video w-full object-cover"
-                    />
-                    <CardHeader>
-                        <CardTitle>Classic Note</CardTitle>
-                        <CardDescription>
-                            - By HarshDev098
-                        </CardDescription>
-                        <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
-                            <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Community
-                        </Badge>
-                    </CardHeader>
-                    <CardFooter>
-                        <Button className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-white transition">
-                            Preview Design
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </li>
-            <li>
-                <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
+                                <img
+                                    src={design.path}
+                                    alt={design.DesignName}
+                                    className="aspect-video w-full object-cover"
+                                />
 
-                    <img
-                        src="/Paper-Ecash/designs/ecashNote2.png"
-                        alt="Design cover"
-                        className="aspect-video w-full object-cover"
-                    />
-                    <CardHeader>
-                        <CardTitle>Classic Note</CardTitle>
-                        <CardDescription>
-                            - By HarshDev098
-                        </CardDescription>
-                        <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
-                            <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Community
-                        </Badge>
-                    </CardHeader>
-                    <CardFooter>
-                        <Button className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-white transition">
-                            Preview Design
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </li>
-            <li>
-                <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
+                                <CardHeader>
+                                    <CardTitle>{design.DesignName}</CardTitle>
+                                    <CardDescription>
+                                        - By {design.designer}
+                                    </CardDescription>
 
-                    <img
-                        src="/Paper-Ecash/designs/ecashNote1.png"
-                        alt="Design cover"
-                        className="aspect-video w-full object-cover"
-                    />
-                    <CardHeader>
-                        <CardTitle>Classic Note</CardTitle>
-                        <CardDescription>
-                            - By HarshDev098
-                        </CardDescription>
-                        <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
-                            <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Community
-                        </Badge>
-                    </CardHeader>
-                    <CardFooter>
-                        <Button className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-white transition">
-                            Preview Design
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </li>
-            <li>
-                <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {design.label.map((lbl) => {
+                                            const config = labelConfig[lbl]
 
-                    <img
-                        src="/Paper-Ecash/designs/ecashNote2.png"
-                        alt="Design cover"
-                        className="aspect-video w-full object-cover"
-                    />
-                    <CardHeader>
-                        <CardTitle>Classic Note</CardTitle>
-                        <CardDescription>
-                            - By HarshDev098
-                        </CardDescription>
-                        <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
-                            <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Community
-                        </Badge>
-                    </CardHeader>
-                    <CardFooter>
-                        <Button className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-white transition">
-                            Preview Design
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </li>
-            <li>
-                <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
+                                            return (
+                                                <Badge
+                                                    key={lbl}
+                                                    className={`transition ${config.bg} ${config.text} ${config.hover}`}
+                                                >
+                                                    <i className={`${config.icon} mr-2`} />
+                                                    {lbl}
+                                                </Badge>
+                                            )
+                                        })}
+                                    </div>
+                                </CardHeader>
 
-                    <img
-                        src="/Paper-Ecash/designs/ecashNote1.png"
-                        alt="Design cover"
-                        className="aspect-video w-full object-cover"
-                    />
-                    <CardHeader>
-                        <CardTitle>Classic Note</CardTitle>
-                        <CardDescription>
-                            - By HarshDev098
-                        </CardDescription>
-                        <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
-                            <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Community
-                        </Badge>
-                    </CardHeader>
-                    <CardFooter>
-                        <Button className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-white transition">
-                            Preview Design
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </li>
-            <li>
-                <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
+                                <CardFooter>
+                                    <Button
+                                        className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-base font-semibold"
+                                        onClick={() => selectDesign(design)}
+                                    >
+                                        Preview Design
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        </li>
+                    )
+                })}
+            </ul>
 
-                    <img
-                        src="/Paper-Ecash/designs/ecashNote2.png"
-                        alt="Design cover"
-                        className="aspect-video w-full object-cover"
-                    />
-                    <CardHeader>
-                        <CardTitle>Classic Note</CardTitle>
-                        <CardDescription>
-                            - By HarshDev098
-                        </CardDescription>
-                        <Badge className="bg-green-50 self-start text-green-700 hover:bg-green-200 transition">
-                            <i className="fa-brands fa-connectdevelop text-base pr-[24px]"></i>
-                            Community
-                        </Badge>
-                    </CardHeader>
-                    <CardFooter>
-                        <Button className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-white transition">
-                            Preview Design
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </li>
-        </ul>
+            {choosenDesign && (
+                <DesignDetails
+                    open={!!choosenDesign}
+                    onClose={() => dispatch(clearChoosenDesign())}
+                />
+            )}
+        </>
     )
 }
