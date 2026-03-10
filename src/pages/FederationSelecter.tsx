@@ -6,9 +6,31 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Stepper from '@/components/Stepper'
 import { useState } from 'react'
+import { useDispatch } from 'react-redux'
+import type { AppDispatch } from '@/redux/store'
+import { useFedimint } from '@/context/FedimintManager'
+import { setWalletStatus } from '@/redux/slices/WalletSlice'
+import { updateSessionThunk } from '@/redux/slices/SessionSlice'
 
 export default function FederationSelecter() {
     const [expanded, setExpanded] = useState(false)
+    const dispatch=useDispatch<AppDispatch>()
+    const {wallet}=useFedimint()
+
+    const joinFederation=async()=>{
+        try{
+            console.log("joining the federation")
+            const result= wallet?.joinFederation('')
+            console.log("federation joining result is ",result)
+            if(result){
+                dispatch(setWalletStatus('opened'))
+                const federationId=await wallet?.federation.getFederationId()
+                dispatch(updateSessionThunk({federationId:federationId}))
+            }
+        }catch(err){
+            console.log("an error occured ",err)
+        }
+    }
 
     return (
         <div className="flex flex-col gap-6 p-6 justify-center items-center">
@@ -73,7 +95,7 @@ export default function FederationSelecter() {
                 <DialogClose asChild>
                     <Button variant="outline">Back</Button>
                 </DialogClose>
-                <Button type="submit" className='bg-[#319BD9]'>Save changes</Button>
+                <Button type="button" className='bg-[#319BD9]' onClick={joinFederation}>Save changes</Button>
             </DialogFooter>
         </div >
     )

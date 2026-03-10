@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fedimint/core": "^0.1.3",
+    "@fedimint/core-web": "0.0.0-dev-test3-e244a985452c5a2db483bcb91a1f5d6ff2267bda",
+    "@fedimint/transport-web": "^0.1.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.1.11",

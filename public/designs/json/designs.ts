@@ -5,7 +5,7 @@ const data: DesignResponse = {
     {
       id: 1,
       DesignName: "Classic Note",
-      path: "/Paper-Ecash/designs/ecashNote1.png",
+      path: "/designs/ecashNote1.png",
       designer: "elsirion",
       lnurl: "0x23432",
       label: ["Community"]
@@ -13,7 +13,7 @@ const data: DesignResponse = {
     {
       id: 2,
       DesignName: "Classic Note",
-      path: "/Paper-Ecash/designs/ecashNote2.png",
+      path: "/designs/ecashNote2.png",
       designer: "elsirion",
       lnurl: "0x23432",
       label: ["Cypherpunk", "Event"]
