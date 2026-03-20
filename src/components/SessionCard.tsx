@@ -1,10 +1,11 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Drawer, DrawerContent } from "@/components/ui/drawer"
 import FederationSelecter from "@/pages/FederationSelecter"
-import { useSelector } from "react-redux";
-import type { RootState } from "@/redux/store";
-import { FedimintManagerProvider } from "@/context/FedimintManager";
-import NoteDenomination from "@/pages/NoteDenomination";
-
+import NoteDenomination from "@/pages/NoteDenomination"
+import Expiry from "@/pages/Expiry"
+import FundNotes from "@/pages/FundNotes"
+import { useSelector } from "react-redux"
+import type { RootState } from "@/redux/store"
+import { FedimintManagerProvider } from "@/context/FedimintManager"
 
 interface SessionCardProps {
   open: boolean
@@ -14,25 +15,22 @@ interface SessionCardProps {
 export default function SessionCard({ open, onClose }: SessionCardProps) {
   const { currentStep } = useSelector((state: RootState) => state.SessionSlice)
 
-  return (
-    <>
-      <FedimintManagerProvider>
-        {currentStep === 1 && (
-          <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl rounded-2xl p-0 overflow-hidden">
-              <FederationSelecter />
-            </DialogContent>
-          </Dialog>
-        )}
+  const STEPS: Record<number, React.ReactNode> = {
+    1: <FederationSelecter />,
+    2: <NoteDenomination />,
+    3: <Expiry />,
+    4: <FundNotes />
+  }
 
-        {currentStep === 2 && (
-          <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl rounded-2xl p-0 overflow-hidden">
-              <NoteDenomination />
-            </DialogContent>
-          </Dialog>
-        )}
-      </FedimintManagerProvider>
-    </>
+  return (
+    <FedimintManagerProvider>
+      <Drawer open={open} onOpenChange={onClose}>
+        <DrawerContent className="w-full rounded-2xl max-h-[80vh] flex flex-col">
+          <div className="flex-1 overflow-y-auto">
+            {STEPS[currentStep]}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </FedimintManagerProvider>
   )
 }

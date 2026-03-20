@@ -22,7 +22,7 @@ export default function Stepper({ currentStep }: StepperProps) {
                     const completed = stepNumber < currentStep
 
                     return (
-                        <div key={index} className="flex-1 flex flex-col items-center relative">
+                        <div key={index} className="flex-1 flex flex-col items-center relative mx-1">
 
                             {/* connector line */}
                             {index !== 0 && (

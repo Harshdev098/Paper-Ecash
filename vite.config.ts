@@ -5,7 +5,9 @@ import wasm from "vite-plugin-wasm"
 
 export default defineConfig({
   base: "/",
-
+  build: {
+    target: 'esnext'
+  },
   plugins: [react(), wasm()],
   assetsInclude: ["**/*.wasm"],
   resolve: {
@@ -21,8 +23,7 @@ export default defineConfig({
 
   optimizeDeps: {
     exclude: [
-      "@fedimint/core",
-      "@fedimint/transport-web"
+      "@fedimint/core-web",
     ],
   },
 })

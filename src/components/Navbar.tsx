@@ -18,17 +18,17 @@ export default function Navbar() {
                 <ul className='hidden md:flex items-center font-medium text-[18px]'>
                     <li>
                         <Link to="/" className='px-3 py-2 mx-3 text-white hover:border-b-2 border-[#7592BB]'>
-                            Home
+                            <i className="fa-solid fa-house px-4"></i> Home
                         </Link>
                     </li>
                     <li>
                         <Link to="/about" className='px-3 py-2 mx-3 text-white hover:border-b-2 border-[#7592BB]'>
-                            About Us
+                            <i className="fa-solid fa-question px-4"></i> Why PaperEcash
                         </Link>
                     </li>
                     <li>
                         <Link to="/services" className='px-3 py-2 mx-3 text-white hover:border-b-2 border-[#7592BB]'>
-                            Services
+                            <i className="fa-solid fa-briefcase px-4"></i> How it Works
                         </Link>
                     </li>
                     <li>
@@ -36,7 +36,7 @@ export default function Navbar() {
                             onClick={() => navigate('/explore')}
                             className='bg-gradient-to-r from-[#7592BB] via-[#83A1CD] to-[#87A6D3] text-[#162446]'
                         >
-                            Get Started
+                            Get Started <i className="fa-solid fa-arrow-right font-bold"></i>
                         </Button>
                     </li>
                 </ul>

@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button"
 import { labelConfig } from '@/utils/label'
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../redux/store';
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { createSessionThunk, loadSessionThunk } from "@/redux/slices/SessionSlice";
+import { useSearchParams } from "react-router-dom";
+import { createSessionThunk } from "@/redux/slices/SessionSlice";
 import { searchDesignsInDraft } from "@/services/SessionControl";
 
 
@@ -18,18 +18,13 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
     const choosenDesign = useSelector((state: RootState) => state.choosenDesign)
     const [searchParams, setSearchParams] = useSearchParams()
     const dispatch = useDispatch<AppDispatch>()
-    const navigate = useNavigate()
 
     const createNewSession = () => {
-        console.log("generating new session")
         const sessionId = crypto.randomUUID()
         if (sessionId && choosenDesign) {
-            console.log("creating the session")
             searchParams.set("id", sessionId)
             setSearchParams(searchParams)
-            dispatch(createSessionThunk({ sessionId, designId: choosenDesign?.id }))
-        } else {
-            console.log("session or design not found")
+            dispatch(createSessionThunk({ sessionId, designId: choosenDesign.id }))
         }
     }
 
@@ -37,11 +32,11 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
         console.log("Draft session found for the same design")
         searchParams.set("id", draftSession)
         setSearchParams(searchParams)
-        dispatch(loadSessionThunk(draftSession))
     }
 
     const startSession = async () => {
         const draftSession = await searchDesignsInDraft(choosenDesign?.id)
+        onClose(false)
         if (!draftSession) {
             createNewSession()
         } else {
@@ -53,7 +48,6 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
         if (!open) {
             console.log("closing the dialog")
             onClose(open)
-            navigate("/explore")
         }
     }
 
@@ -76,11 +70,11 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
 
                     <div className="p-6 space-y-4 !pt-0">
                         <DialogHeader className="space-y-1 text-left items-start">
-                            <DialogTitle className="text-2xl font-semibold">
+                            <DialogTitle className="text-lg sm:text-xl md:text-2xl font-semibold">
                                 {choosenDesign?.DesignName}
                             </DialogTitle>
 
-                            <DialogDescription>
+                            <DialogDescription className="text-sm sm:text-base">
                                 Designer: {choosenDesign?.designer}
                             </DialogDescription>
                             <DialogDescription>
@@ -105,10 +99,17 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
                         </div>
 
                         <DialogFooter className="flex flex-row justify-end items-center gap-3">
-                            <Button variant="outline" className="w-8 h-8 rounded-full bg-pink-50 border-pink-400 text-pink-600 hover:bg-pink-100 hover:text-pink-700 hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+                            <Button
+                                variant="outline"
+                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-pink-50 border-pink-400 text-pink-600 hover:bg-pink-100 hover:text-pink-700 flex items-center justify-center"
+                            >
                                 <i className="fa-solid fa-hand-holding-heart text-base"></i>
                             </Button>
-                            <Button type="button" className="bg-[#319BD9] hover:bg-[#0e90dc] text-base font-semibold" onClick={startSession}>
+                            <Button
+                                type="button"
+                                className="bg-[#319BD9] hover:bg-[#0e90dc] text-sm sm:text-base font-semibold px-3 py-2 sm:px-4 sm:py-3"
+                                onClick={startSession}
+                            >
                                 Start session
                             </Button>
                         </DialogFooter>

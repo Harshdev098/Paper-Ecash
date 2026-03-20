@@ -2,16 +2,16 @@ import { Route, Routes } from 'react-router-dom'
 import './App.css'
 import Home from './pages/Home'
 import Main from './pages/Main'
-// import { useMemo } from 'react'
-// import { isInitialized, initialize } from '@fedimint/core-web';
+import { useMemo } from 'react'
+import { isInitialized, initialize } from '@fedimint/core-web';
 
 function App() {
-    // useMemo(async()=>{
-    //     if(!isInitialized){
-    //         await initialize()
-    //         console.log("Fedimint SDK initialized")
-    //     }
-    // },[])
+    useMemo(async()=>{
+        if(!isInitialized){
+            await initialize()
+            console.log("Fedimint SDK initialized")
+        }
+    },[])
     return (
         <>
             <Routes>

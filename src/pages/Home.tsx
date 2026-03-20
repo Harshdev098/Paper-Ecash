@@ -1,7 +1,7 @@
 import Navbar from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
 import CurveLine from '../assets/Curve Line.svg'
-import Gift from '../assets/Gift.svg'
+import Gift from '../assets/Gift.png'
 import Bitcoiners from '../assets/Bitcoiners.png'
 import Fedimint from '../assets/Fedimint.png'
 import { useNavigate } from 'react-router-dom'

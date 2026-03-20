@@ -1,9 +1,9 @@
 // import React from 'react'
 
-export default function PreviewDesign() {
+export default function DownloadPDF() {
   return (
     <>
-        
+    
     </>
   )
 }

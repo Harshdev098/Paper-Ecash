@@ -18,6 +18,7 @@ import type { AppDispatch } from '@/redux/store'
 import { loadSessionThunk } from '@/redux/slices/SessionSlice'
 import SessionCard from '@/components/SessionCard'
 
+
 export default function Main() {
     const dispatch = useDispatch<AppDispatch>()
     const [tabs, setTabs] = useState<'explore' | 'draft' | 'build'>('explore')
@@ -90,7 +91,7 @@ export default function Main() {
 
                     <Separator />
 
-                    <section className='mt-4 mx-6 px-4 py-3 bg-white rounded-xl flex flex-wrap gap-2 items-center w-fit mr-auto'>
+                    <section className='mt-4 mx-6 px-4 py-3 bg-white rounded-xl flex flex-wrap gap-2 items-center w-fit'>
                         <TooltipProvider>
                             {(['Community', 'Event', 'Cypherpunk', 'Gifts', 'Regular', 'Other'] as Label[]).map(
                                 (label) => {

@@ -9,7 +9,7 @@ export const DesignSlice = createSlice({
   name: "ChoosenDesign",
   initialState,
   reducers: {
-    setChoosenDesign: (state, action: PayloadAction<Design>) => {
+    setChoosenDesign: (_, action: PayloadAction<Design>) => {
       return action.payload
     },
     clearChoosenDesign: () => {

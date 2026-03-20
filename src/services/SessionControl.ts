@@ -9,7 +9,7 @@ export const filterDraftSessions = async (): Promise<session[]> => {
     const sessions = await db.getAll(SESSION_STORE_NAME);
     console.log("all fetched sessions from db is ", sessions)
 
-    const draftSessions = sessions.filter(session => session.currentStep < 4)
+    const draftSessions = sessions.filter(session => session.currentStep < 5)
     console.log("draft sessions are ", draftSessions)
     return draftSessions;
 }

@@ -25,7 +25,7 @@ export const labelConfig: Record<
     hover: 'hover:bg-sky-200',
     selected:'bg-sky-200',
     icon: 'fa-regular fa-calendar-check',
-    tooltip: 'Bitcoin Event/Submit',
+    tooltip: 'Bitcoin Event/Summit',
   },
   Gifts: {
     bg: 'bg-red-50',

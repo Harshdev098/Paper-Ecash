@@ -1,3 +1,5 @@
+import type { DenominationPerNote } from "./fedimint.type"
+
 export const LABELS = [
     'Community',
     'Other',
@@ -25,6 +27,9 @@ export type DesignResponse = {
 export type session = {
     sessionId: string | null,
     designId: number | null,
+    walletId:string | null,
+    operationId:string | null
+    paymentStatus: 'paid' | 'pending'
     currentStep: number,
     federationId: string | null,
     updatedAt: string | null,
@@ -38,13 +43,13 @@ export type CreateSessionPayload = {
 export type notesPayload = {
     sessionId: string | null,
     federationId: string | null,
-    notes: {},
-    expiry: number | null,
+    notes: DenominationPerNote[],
+    expiry?: number | null,
     designId: number | null
 }
 
 export type NotesData = {
-    notes: {},
+    notes: DenominationPerNote[],
     federation_id: string,
     session_id: string,
     expiry: number

@@ -1,12 +1,11 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { setWalletStatus } from "@/redux/slices/WalletSlice";
-import { WalletDirector, type FedimintWallet } from '@fedimint/core'
-import { WasmWorkerTransport } from '@fedimint/transport-web'
+import { getWallet, listClients, openWallet, setLogLevel, type Wallet } from "@fedimint/core-web";
 
 interface FedimintManagerType {
-    wallet: FedimintWallet | undefined
+    wallet: Wallet | undefined
     clearInstance: () => void
 }
 
@@ -15,32 +14,25 @@ const FedimintManagerContext = createContext<FedimintManagerType | undefined>(un
 export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const dispatch = useDispatch<AppDispatch>()
     const { walletStatus } = useSelector((state: RootState) => state.WalletSlice)
-    const [wallet, setWallet] = useState<FedimintWallet | undefined>(undefined)
+    const [wallet, setWallet] = useState<Wallet | undefined>(undefined)
+    const { walletId, currentStep } = useSelector((state: RootState) => state.SessionSlice)
 
     const initializeFedimintInstance = async () => {
         try {
             dispatch(setWalletStatus('opening'))
-            let director = new WalletDirector(new WasmWorkerTransport())
-            director.setLogLevel('debug')
-            const hasMnemonic = await director.getMnemonic()
-            console.log('the has mnemonic is', hasMnemonic)
-            if (!hasMnemonic) {
-                const mnemonic = await director.generateMnemonic()
-                console.log("the mnemonic generated is", mnemonic)
-            }
-            const wallet = await director.createWallet()
-            console.log("wallet directory initiated and opening wallet ", wallet)
-            let isOpen = await wallet.joinFederation('fed11qgqrgvnhwden5te0v9k8q6rp9ekh2arfdeukuet595cr2ttpd3jhq6rzve6zuer9wchxvetyd938gcewvdhk6tcqqysptkuvknc7erjgf4em3zfh90kffqf9srujn6q53d6r056e4apze5cw27h75')
-            console.log("wallet opening", isOpen)
-            setWallet(wallet)
-            if (isOpen) {
+            const walletList = listClients()
+            setLogLevel('debug')
+            console.log("walletList is ", walletList)
+            console.log("the wallet id and currentStep from the redux is ", walletId, currentStep)
+            if (walletId) {
+                const walletData = (await getWallet(walletId)) || (await openWallet(walletId));
+                console.log("wallet data is ", walletData)
                 dispatch(setWalletStatus('opened'))
-            } else {
-                console.log("wallet is not open ", isOpen)
-                dispatch(setWalletStatus('closed'))
+                setWallet(walletData)
             }
         } catch (err) {
             console.log("an error occured", err)
+            dispatch(setWalletStatus('closed'))
         }
     }
 
@@ -50,9 +42,22 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
         }
     }
 
-    useMemo(async () => {
-        await initializeFedimintInstance()
-    }, [dispatch, walletStatus])
+    useEffect(() => {
+        if (!walletId) return
+        initializeFedimintInstance()
+    }, [walletId])
+
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            clearInstance()
+        }
+
+        window.addEventListener("beforeunload", handleBeforeUnload)
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload)
+        }
+    }, [walletStatus, wallet])
 
     return (
         <FedimintManagerContext.Provider value={{ wallet, clearInstance }}>
