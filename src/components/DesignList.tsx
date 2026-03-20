@@ -8,6 +8,7 @@ import type { AppDispatch, RootState } from '../redux/store';
 import type { Design } from '@/types/init.type'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from './ui/empty'
 import DesignDetails from './DesignDetails'
+import { getAssetUrl } from '@/utils/url'
 
 
 export default function DesignList({ filteredDesigns }: { filteredDesigns: Design[] }) {
@@ -41,7 +42,7 @@ export default function DesignList({ filteredDesigns }: { filteredDesigns: Desig
                             <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                                 <img
-                                    src={design.path}
+                                    src={getAssetUrl(design.path)}
                                     alt={design.DesignName}
                                     className="aspect-video w-full object-cover"
                                 />

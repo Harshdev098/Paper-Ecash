@@ -7,6 +7,7 @@ import type { AppDispatch, RootState } from '../redux/store';
 import { useSearchParams } from "react-router-dom";
 import { createSessionThunk } from "@/redux/slices/SessionSlice";
 import { searchDesignsInDraft } from "@/services/SessionControl";
+import { getAssetUrl } from "@/utils/url";
 
 
 interface DesignCardProps {
@@ -57,7 +58,7 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
                 <DialogContent className="max-w-5xl rounded-2xl p-0 overflow-hidden">
                     <div className="relative group">
                         <img
-                            src={choosenDesign?.path}
+                            src={getAssetUrl(choosenDesign?.path ?? '')}
                             alt={choosenDesign?.DesignName}
                             className="w-full object-contain"
                         />
