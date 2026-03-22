@@ -1,3 +1,5 @@
+import type { LightningTransaction } from "@fedimint/core-web";
+
 export interface FedimintTotals {
     federations: number;
     tx_volume: number;
@@ -16,6 +18,10 @@ export interface FederationSummary {
 
 export type FormatedFederationData = FederationSummary & {
     members: number;
+}
+
+export type LnTransaction= LightningTransaction & {
+    amount:number
 }
 
 export interface FederationRating {

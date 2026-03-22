@@ -10,6 +10,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import type { AppDispatch } from '@/redux/store'
 import { loadSessionThunk } from '@/redux/slices/SessionSlice'
+import { getAssetUrl } from '@/utils/url'
 
 
 export default function Draft() {
@@ -40,7 +41,7 @@ export default function Draft() {
                                 <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                                     <img
-                                        src={design.path}
+                                        src={getAssetUrl(design.path)}
                                         alt={design.DesignName}
                                         className="aspect-video w-full object-cover"
                                     />

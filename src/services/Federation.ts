@@ -1,7 +1,7 @@
 import { api } from '@/api/observerClient'
-import type { FormatedFederationData } from '@/types/fedimint.type'
+import type { FormatedFederationData, LnTransaction } from '@/types/fedimint.type'
 import { getSessionBySessionId } from '@/utils/db';
-import type { CreateBolt11Response, LightningTransaction, Wallet } from '@fedimint/core-web';
+import { parseBolt11Invoice, type CreateBolt11Response, type LightningTransaction, type Wallet } from '@fedimint/core-web';
 
 export const fetchFederationWithSessionId = async (sessionId: string) => {
     const federationId = await getSessionBySessionId(sessionId)
@@ -53,7 +53,7 @@ export const createInvoice=async(wallet:Wallet, amountMsats:number,expiry:number
     }
 }
 
-export const searchInvoiceForOperation=async(wallet:Wallet,operationId:string):Promise<string | null>=>{
+export const searchInvoiceForOperation=async(wallet:Wallet,operationId:string | null):Promise<LnTransaction | null>=>{
     try{
         const transaction=await wallet.federation.listTransactions()
         let found=false
@@ -61,7 +61,8 @@ export const searchInvoiceForOperation=async(wallet:Wallet,operationId:string):P
             if(tx.kind==='ln'){
                 if(tx.operationId===operationId){
                     found=true
-                    return (tx as LightningTransaction).invoice;
+                    const amount=(await parseBolt11Invoice((tx as LightningTransaction).invoice)).amount
+                    return {...(tx as LightningTransaction), amount};
                 }
             }
         }

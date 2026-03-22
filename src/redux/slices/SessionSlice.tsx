@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
+import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import type { session, CreateSessionPayload } from "@/types/init.type"
 import { getSessionBySessionId, saveCreatedSession, updateSessionOnDB } from "@/utils/db"
 
@@ -75,7 +75,11 @@ export const loadSessionThunk = createAsyncThunk(
 export const SessionSlice = createSlice({
     name: "Session",
     initialState,
-    reducers: {},
+    reducers: {
+        updateLocalStep: (state, action: PayloadAction<number>) => {
+            state.currentStep = action.payload -1
+        }
+    },
     extraReducers: (builder) => {
         builder.addCase(createSessionThunk.fulfilled, (state, action) => {
             state.sessionId = action.payload.sessionId
@@ -111,4 +115,5 @@ export const SessionSlice = createSlice({
     }
 })
 
+export const { updateLocalStep } = SessionSlice.actions
 export default SessionSlice.reducer;

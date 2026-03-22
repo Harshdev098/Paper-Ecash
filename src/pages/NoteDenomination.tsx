@@ -10,12 +10,13 @@ import { Input } from '@/components/ui/input'
 import Stepper from "@/components/Stepper";
 import { useEffect, useMemo, useState } from "react";
 import type { DenominationPerNote } from "@/types/fedimint.type";
-import { getSessionBySessionId, saveNotesToDB } from "@/utils/db";
+import { getNotesData, getSessionBySessionId, saveNotesToDB } from "@/utils/db";
 import { updateSessionThunk } from '@/redux/slices/SessionSlice'
+import { BackToStep } from '@/services/SessionControl'
 
 
 export default function NoteDenomination() {
-    const { walletId, sessionId, designId } = useSelector((state: RootState) => state.SessionSlice)
+    const { walletId, sessionId, designId, currentStep } = useSelector((state: RootState) => state.SessionSlice)
     const { wallet } = useFedimint()
     const dispatch = useDispatch<AppDispatch>()
     const [denominationList, setDenominationList] = useState<number[]>([])
@@ -48,6 +49,21 @@ export default function NoteDenomination() {
     useEffect(() => {
         NoteDenominationList()
     }, [])
+
+    useEffect(() => {
+        const loadPreviousNotes = async () => {
+            if (!sessionId) return
+            try {
+                const saved = await getNotesData(sessionId)
+                if (saved?.notes?.length) {
+                    setSelectedDenomination(saved.notes)
+                }
+            } catch (err) {
+                console.log("Could not load previous denominations", err)
+            }
+        }
+        loadPreviousNotes()
+    }, [sessionId])
 
     useEffect(() => {
         if (wallet && walletId && sessionId) {
@@ -200,7 +216,8 @@ export default function NoteDenomination() {
             </section>
 
             <DrawerFooter>
-                <Button type="button" onClick={updateSessionWithNotes} className='bg-[#319BD9] hover:bg-[#0e90dc]'>Next <i className="fa-solid fa-arrow-right"></i></Button>
+                <Button type="button" onClick={updateSessionWithNotes} className='bg-[#319BD9] hover:bg-[#0e90dc] font-semibold'>Next <i className="fa-solid fa-arrow-right"></i></Button>
+                <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>Back</Button>
             </DrawerFooter>
         </>
     )

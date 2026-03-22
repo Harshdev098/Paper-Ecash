@@ -4,24 +4,41 @@ import { DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/co
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldLabel } from "@/components/ui/field"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { getNotesData, saveNotesToDB } from "@/utils/db"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/redux/store"
 import { updateSessionThunk } from "@/redux/slices/SessionSlice"
+import { BackToStep } from "@/services/SessionControl"
 
 
 export default function Expiry() {
     const [expiry, setExpiry] = useState<null | number>(null)
-    const { sessionId, designId } = useSelector((state: RootState) => state.SessionSlice)
-    const dispatch=useDispatch<AppDispatch>()
+    const { sessionId, designId, currentStep } = useSelector((state: RootState) => state.SessionSlice)
+    const dispatch = useDispatch<AppDispatch>()
+
+    useEffect(() => {
+        const loadPreviousExpiry = async () => {
+            if (!sessionId) return
+            try {
+                const notes = await getNotesData(sessionId)
+                if (notes?.expiry) {
+                    // Convert back from seconds to days
+                    setExpiry(notes.expiry / (24 * 60 * 60))
+                }
+            } catch (err) {
+                console.log("Could not load previous expiry", err)
+            }
+        }
+        loadPreviousExpiry()
+    }, [sessionId])
 
     const saveExpiryOnDB = async () => {
         try {
             if (sessionId && designId) {
                 const notes = await getNotesData(sessionId)
-                console.log("the data in saveExpiry function is ",sessionId,designId,notes.notes,expiry)
-                await saveNotesToDB({ sessionId, notes: notes.notes, federationId: notes.federationId, designId, expiry: expiry ? expiry * 24 * 60 * 60 : null})
+                console.log("the data in saveExpiry function is ", sessionId, designId, notes.notes, expiry)
+                await saveNotesToDB({ sessionId, notes: notes.notes, federationId: notes.federationId, designId, expiry: expiry ? expiry * 24 * 60 * 60 : null })
                 dispatch(updateSessionThunk())
             }
         } catch (err) {
@@ -76,7 +93,8 @@ export default function Expiry() {
                 </Field>
             </section>
             <DrawerFooter>
-                <Button type="button" onClick={saveExpiryOnDB} className='bg-[#319BD9] hover:bg-[#0e90dc]'>Next <i className="fa-solid fa-arrow-right"></i></Button>
+                <Button type="button" onClick={saveExpiryOnDB} className='bg-[#319BD9] hover:bg-[#0e90dc] font-semibold'>Next <i className="fa-solid fa-arrow-right"></i></Button>
+                <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)} className="font-semibold">Back</Button>
             </DrawerFooter>
         </>
     )

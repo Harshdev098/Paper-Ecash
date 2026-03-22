@@ -1,4 +1,4 @@
-import { DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
+import { DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/redux/store"
@@ -11,11 +11,14 @@ import { useFedimint } from "@/context/FedimintManager"
 import type { LnReceiveState } from "@fedimint/core-web"
 import { updateSessionThunk } from "@/redux/slices/SessionSlice"
 import Stepper from "@/components/Stepper"
+import { Button } from "@/components/ui/button"
+import { BackToStep } from "@/services/SessionControl"
 
 
 export default function FundNotes() {
     const { sessionId, walletId, operationId } = useSelector((state: RootState) => state.SessionSlice)
     const [selectedDenominations, setSelectedDenomination] = useState<DenominationPerNote[]>([])
+    const { currentStep } = useSelector((state: RootState) => state.SessionSlice)
     const [createdInvoice, setCreatedInvoice] = useState<string | null>(null)
     const { wallet } = useFedimint()
     const dispatch = useDispatch<AppDispatch>()
@@ -37,33 +40,6 @@ export default function FundNotes() {
         }, 300000);
     }
 
-    useEffect(() => {
-        const loadSelectedDenomination = async () => {
-            if (sessionId && wallet) {
-                const notesData = await getNotesData(sessionId)
-                setSelectedDenomination(notesData.notes)
-                let invoiceToUse: string | null = null
-
-                if (operationId) {
-                    const invoice = await searchInvoiceForOperation(wallet, operationId)
-                    if (invoice) {
-                        invoiceToUse = invoice
-                        setCreatedInvoice(invoice)
-                        unsubscribe(operationId)
-                    }
-                }
-
-                if (!invoiceToUse) {
-                    const result = await createInvoice(wallet, totalAmount * 1000, notesData.expiry ?? 0)
-                    dispatch(updateSessionThunk({ operationId: result.operation_id, upgradeStep: false }))
-                    setCreatedInvoice(result.invoice)
-                    unsubscribe(result.operation_id)
-                }
-            }
-        }
-        loadSelectedDenomination()
-    }, [walletId, wallet])
-
     const totalAmount = useMemo(() => {
         const total = selectedDenominations.reduce(
             (sum, item) => sum + item.denomination * item.quantity,
@@ -81,6 +57,52 @@ export default function FundNotes() {
         return `(${expr})`
     }, [selectedDenominations])
 
+    useEffect(() => {
+        const loadSelectedDenomination = async () => {
+            if (sessionId && wallet) {
+                try {
+                    const notesData = await getNotesData(sessionId)
+                    setSelectedDenomination(notesData.notes)
+                    let invoiceToUse: string | null = null
+
+                    const invoiceData = await searchInvoiceForOperation(wallet, operationId)
+                    if (operationId && (invoiceData?.amount === totalAmount)) {
+                        if (invoiceData) {
+                            invoiceToUse = invoiceData.invoice
+                            setCreatedInvoice(invoiceData.invoice)
+                            unsubscribe(operationId)
+                        }
+                    }
+
+                    if (!invoiceToUse) {
+                        const result = await createInvoice(wallet, totalAmount * 1000, notesData.expiry ?? 0)
+                        dispatch(updateSessionThunk({ operationId: result.operation_id, upgradeStep: false }))
+                        setCreatedInvoice(result.invoice)
+                        unsubscribe(result.operation_id)
+                    }
+                } catch (err) {
+                    console.log("an error occured", err)
+                }
+            }
+        }
+        loadSelectedDenomination()
+    }, [walletId, wallet, selectedDenominations])
+
+    const getPaymentStatus = async () => {
+        if (!wallet) return;
+        try {
+            if (!operationId) throw new Error('Operation Id not found')
+            const paymentData = await searchInvoiceForOperation(wallet, operationId)
+            if (paymentData?.outcome === 'claimed' || paymentData?.outcome === 'funded') {
+                dispatch(updateSessionThunk({ operationId: operationId, paymentStatus: 'paid' }))
+            } else {
+                alert('Payment Status: Waiting')
+            }
+        } catch (err) {
+            console.log("an error occured")
+        }
+    }
+
     return (
         <div className="flex flex-col justify-center w-full">
             <DrawerHeader>
@@ -92,12 +114,12 @@ export default function FundNotes() {
                 <div className="flex items-center justify-center gap-3 text-center">
                     <i className="fa-solid fa-triangle-exclamation"></i>
                     <AlertDescription>
-                        If someone scans the QR, they can redeem the funds.
+                        If someone scans your Paper Notes, they can redeem the funds.
                     </AlertDescription>
                 </div>
             </Alert>
             <div className="text-center m-6">
-                <h3 className="text-xl font-semibold">Total Fundable Amount: <b className="text-[#1C6FA7]">{totalAmount} sats</b></h3>
+                <h3 className="text-xl font-semibold text-[#4B5971]">Total Fundable Amount: <b className="text-[#1C6FA7]">{totalAmount} sats</b></h3>
                 <p className="text-sm text-[#4B5563]">{totalExpression}</p>
             </div>
             {createdInvoice && <section className="max-w-md mx-auto mt-4 space-y-4 mb-4">
@@ -134,6 +156,10 @@ export default function FundNotes() {
                     You can also paste the invoice into an external Lightning wallet to complete the payment.
                 </p>
             </section>}
+            <DrawerFooter>
+                <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>Back</Button>
+                <p className="p-1 m-2 text-[#4B5971] text-sm text-center font-semibold cursor-pointer" onClick={getPaymentStatus}>Already Paid? Check payment status manually</p>
+            </DrawerFooter>
         </div>
     )
 }

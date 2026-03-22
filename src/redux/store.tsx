@@ -8,9 +8,9 @@ export const store= configureStore({
     reducer:{
         choosenDesign:DesignSlice,
         SessionSlice:SessionSlice,
-        WalletSlice:WalletSlice
+        WalletSlice:WalletSlice,
+        // NoteSlice: NoteSlice, 
     },
-    
 })
 
 

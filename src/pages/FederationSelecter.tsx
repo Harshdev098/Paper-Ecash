@@ -18,6 +18,7 @@ import type { FormatedFederationData } from '@/types/fedimint.type'
 export default function FederationSelecter() {
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [selectedId, setSelectedId] = useState<string | null>(null)
+    const [isJoining,setIsJoining]=useState<boolean>(false)
     const dispatch = useDispatch<AppDispatch>()
     const [inviteCode, setInviteCode] = useState<string | null>(null)
     const { sessionId, walletId, currentStep } = useSelector((state: RootState) => state.SessionSlice)
@@ -37,6 +38,7 @@ export default function FederationSelecter() {
         try {
             if (!inviteCode) throw Error("Please enter Invite Code or select a Federation")
             console.log("joining the federation", walletId, currentStep)
+            setIsJoining(true);
             let mnemonics = await getMnemonic();
             console.log('mnemonic is ', mnemonics);
 
@@ -54,6 +56,8 @@ export default function FederationSelecter() {
             }
         } catch (err) {
             console.log("an error occured ", err)
+        }finally{
+            setIsJoining(false)
         }
     }
 
@@ -133,7 +137,7 @@ export default function FederationSelecter() {
             </div>
 
             <DrawerFooter>
-                <Button type="button" className='bg-[#319BD9] hover:bg-[#0e90dc]' onClick={selectFederation}>Next <i className="fa-solid fa-arrow-right"></i></Button>
+                <Button disabled={isJoining} type="button" className='bg-[#319BD9] hover:bg-[#0e90dc] font-semibold' onClick={selectFederation}>{isJoining ? "Joining..." : "Next "}{!isJoining && <i className="fa-solid fa-arrow-right"></i> }</Button>
             </DrawerFooter>
         </div>
     )

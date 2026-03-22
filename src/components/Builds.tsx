@@ -6,6 +6,7 @@ import { extractDesingListFromSession, filterBuildSession } from '@/services/Ses
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card'
 import { Badge } from './ui/badge'
 import { labelConfig } from '@/utils/label'
+import { getAssetUrl } from '@/utils/url'
 
 
 export default function Builds() {
@@ -27,7 +28,7 @@ export default function Builds() {
                                 <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                                     <img
-                                        src={design.path}
+                                        src={getAssetUrl(design.path)}
                                         alt={design.DesignName}
                                         className="aspect-video w-full object-cover"
                                     />

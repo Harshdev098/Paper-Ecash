@@ -1,7 +1,10 @@
 import type { DraftDesign, session } from "@/types/init.type";
 import { openedDB, SESSION_STORE_NAME } from "@/utils/db"
 import designs from '../../public/designs/json/designs'
+import type { AppDispatch } from "@/redux/store";
+import { updateLocalStep } from "@/redux/slices/SessionSlice";
 
+export const BUILD_STEP=5;
 
 export const filterDraftSessions = async (): Promise<session[]> => {
     const db = await openedDB
@@ -9,7 +12,7 @@ export const filterDraftSessions = async (): Promise<session[]> => {
     const sessions = await db.getAll(SESSION_STORE_NAME);
     console.log("all fetched sessions from db is ", sessions)
 
-    const draftSessions = sessions.filter(session => session.currentStep < 5)
+    const draftSessions = sessions.filter(session => session.currentStep < BUILD_STEP)
     console.log("draft sessions are ", draftSessions)
     return draftSessions;
 }
@@ -29,7 +32,7 @@ export const filterBuildSession = async (): Promise<session[]> => {
     const db = await openedDB
 
     const sessions = await db.getAll(SESSION_STORE_NAME)
-    const builds = sessions.filter(session => session.currentStep === 4)
+    const builds = sessions.filter(session => session.currentStep === BUILD_STEP)
     console.log("builds are ", builds)
     return builds;
 }
@@ -57,4 +60,8 @@ export const extractDesingListFromSession = (sessions: session[]) => {
 export const extractDesign = (designId: number) => {
     const design = designs.designs.find(design => design.id === designId)
     return design ? design : null;
+}
+
+export const BackToStep=(dispatch:AppDispatch,currentStep:number)=>{
+    dispatch(updateLocalStep(currentStep))
 }
