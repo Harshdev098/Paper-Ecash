@@ -13,10 +13,13 @@ import type { DenominationPerNote } from "@/types/fedimint.type";
 import { getNotesData, getSessionBySessionId, saveNotesToDB } from "@/utils/db";
 import { updateSessionThunk } from '@/redux/slices/SessionSlice'
 import { BackToStep } from '@/services/SessionControl'
+import Loader from '@/components/Loader'
+import { setLoader } from '@/redux/slices/LoaderSlice'
 
 
 export default function NoteDenomination() {
     const { walletId, sessionId, designId, currentStep } = useSelector((state: RootState) => state.SessionSlice)
+    const { loader, loaderMessage } = useSelector((state: RootState) => state.LoaderSlice)
     const { wallet } = useFedimint()
     const dispatch = useDispatch<AppDispatch>()
     const [denominationList, setDenominationList] = useState<number[]>([])
@@ -54,22 +57,20 @@ export default function NoteDenomination() {
         const loadPreviousNotes = async () => {
             if (!sessionId) return
             try {
+                dispatch(setLoader({ loader: true, loaderMessage: null }))
                 const saved = await getNotesData(sessionId)
                 if (saved?.notes?.length) {
                     setSelectedDenomination(saved.notes)
                 }
             } catch (err) {
                 console.log("Could not load previous denominations", err)
+            } finally {
+                dispatch(setLoader({ loader: false, loaderMessage: null }))
             }
         }
         loadPreviousNotes()
     }, [sessionId])
 
-    useEffect(() => {
-        if (wallet && walletId && sessionId) {
-            console.log("the data rendering the note denomination is ", sessionId, walletId, wallet.id)
-        }
-    }, [wallet, walletId])
 
     const toggleDenomination = (value: number) => {
         console.log("toggling denomination", value)
@@ -126,6 +127,7 @@ export default function NoteDenomination() {
     const updateSessionWithNotes = async () => {
         try {
             if (selectedDenominations.length == 0) throw new Error("Please select a denomination")
+            dispatch(setLoader({ loader: true, loaderMessage: null }))
             if (sessionId && walletId) {
                 console.log("the data in updating the session with notes is ", sessionId, walletId, wallet?.id)
                 const session = await getSessionBySessionId(sessionId)
@@ -136,11 +138,14 @@ export default function NoteDenomination() {
             }
         } catch (err) {
             console.log("an error occured while updating session", err)
+        } finally {
+            dispatch(setLoader({ loader: false, loaderMessage: null }))
         }
     }
 
     return (
         <>
+            {loader && <Loader message={loaderMessage} />}
             <DrawerHeader>
                 <DrawerTitle className='text-center text-2xl'>Select Note Denomination</DrawerTitle>
                 <DrawerDescription className='text-center'>

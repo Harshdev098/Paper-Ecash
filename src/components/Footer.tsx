@@ -15,7 +15,7 @@ export default function Footer() {
 
             <div className="text-white text-lg my-2 text-center mb-4">
                 <Link to={"https://github.com/Harshdev098/Paper-Ecash"}><i className="fa-brands fa-github mx-2"></i></Link>
-                <Link to={"https://x.com/fedimint"}><i className="fa-brands fa-x-twitter mx-2"></i></Link>
+                <Link to={"https://x.com/Harsh_dev098"}><i className="fa-brands fa-x-twitter mx-2"></i></Link>
             </div>
         </footer>
     )

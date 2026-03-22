@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import DesignSlice from "./slices/DesignSlice";
 import SessionSlice from "./slices/SessionSlice";
 import WalletSlice from "./slices/WalletSlice";
+import LoaderSlice from "./slices/LoaderSlice";
 // import NoteSlice from "./slices/NoteSlice";
 
 export const store= configureStore({
@@ -9,6 +10,7 @@ export const store= configureStore({
         choosenDesign:DesignSlice,
         SessionSlice:SessionSlice,
         WalletSlice:WalletSlice,
+        LoaderSlice:LoaderSlice
         // NoteSlice: NoteSlice, 
     },
 })

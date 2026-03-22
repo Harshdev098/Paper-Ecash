@@ -13,12 +13,15 @@ import { updateSessionThunk } from "@/redux/slices/SessionSlice"
 import Stepper from "@/components/Stepper"
 import { Button } from "@/components/ui/button"
 import { BackToStep } from "@/services/SessionControl"
+import { setLoader } from "@/redux/slices/LoaderSlice"
+import Loader from "@/components/Loader"
 
 
 export default function FundNotes() {
     const { sessionId, walletId, operationId } = useSelector((state: RootState) => state.SessionSlice)
     const [selectedDenominations, setSelectedDenomination] = useState<DenominationPerNote[]>([])
     const { currentStep } = useSelector((state: RootState) => state.SessionSlice)
+    const { loader, loaderMessage } = useSelector((state: RootState) => state.LoaderSlice)
     const [createdInvoice, setCreatedInvoice] = useState<string | null>(null)
     const { wallet } = useFedimint()
     const dispatch = useDispatch<AppDispatch>()
@@ -40,6 +43,24 @@ export default function FundNotes() {
         }, 300000);
     }
 
+    useEffect(() => {
+        const loadSelectedDenomination = async () => {
+            if (sessionId) {
+                try {
+                    dispatch(setLoader({ loader: true, loaderMessage: "Loading Selected Denomination" }))
+                    const notesData = await getNotesData(sessionId)
+                    setSelectedDenomination(notesData.notes)
+                } catch (err) {
+                    console.log(err)
+                } finally {
+                    dispatch(setLoader({ loader: false, loaderMessage: null }))
+                }
+            }
+        }
+
+        loadSelectedDenomination()
+    }, [sessionId])
+
     const totalAmount = useMemo(() => {
         const total = selectedDenominations.reduce(
             (sum, item) => sum + item.denomination * item.quantity,
@@ -58,40 +79,43 @@ export default function FundNotes() {
     }, [selectedDenominations])
 
     useEffect(() => {
-        const loadSelectedDenomination = async () => {
-            if (sessionId && wallet) {
-                try {
-                    const notesData = await getNotesData(sessionId)
-                    setSelectedDenomination(notesData.notes)
-                    let invoiceToUse: string | null = null
+        const handleInvoice = async () => {
+            if (!wallet || !sessionId || selectedDenominations.length === 0) return;
 
-                    const invoiceData = await searchInvoiceForOperation(wallet, operationId)
-                    if (operationId && (invoiceData?.amount === totalAmount)) {
-                        if (invoiceData) {
-                            invoiceToUse = invoiceData.invoice
-                            setCreatedInvoice(invoiceData.invoice)
-                            unsubscribe(operationId)
-                        }
-                    }
+            try {
+                dispatch(setLoader({ loader: true, loaderMessage: "Processing Invoice" }))
+                let invoiceToUse: string | null = null
+                const invoiceData = await searchInvoiceForOperation(wallet, operationId)
 
-                    if (!invoiceToUse) {
-                        const result = await createInvoice(wallet, totalAmount * 1000, notesData.expiry ?? 0)
-                        dispatch(updateSessionThunk({ operationId: result.operation_id, upgradeStep: false }))
-                        setCreatedInvoice(result.invoice)
-                        unsubscribe(result.operation_id)
-                    }
-                } catch (err) {
-                    console.log("an error occured", err)
+                if (operationId && invoiceData?.amount === totalAmount) {
+                    invoiceToUse = invoiceData.invoice
+                    setCreatedInvoice(invoiceData.invoice)
+                    unsubscribe(operationId)
                 }
+
+                if (!invoiceToUse) {
+                    const notesData = await getNotesData(sessionId)
+                    const result = await createInvoice(wallet, totalAmount * 1000, notesData.expiry ?? 0)
+
+                    dispatch(updateSessionThunk({ operationId: result.operation_id, upgradeStep: false }))
+                    setCreatedInvoice(result.invoice)
+                    unsubscribe(result.operation_id)
+                }
+            } catch (err) {
+                console.log(err)
+            } finally {
+                dispatch(setLoader({ loader: false, loaderMessage: null }))
             }
         }
-        loadSelectedDenomination()
-    }, [walletId, wallet, selectedDenominations])
+
+        handleInvoice()
+    }, [wallet, walletId, sessionId, totalAmount])
 
     const getPaymentStatus = async () => {
         if (!wallet) return;
         try {
             if (!operationId) throw new Error('Operation Id not found')
+            dispatch(setLoader({ loader: true, loaderMessage: "Getting Payment status" }))
             const paymentData = await searchInvoiceForOperation(wallet, operationId)
             if (paymentData?.outcome === 'claimed' || paymentData?.outcome === 'funded') {
                 dispatch(updateSessionThunk({ operationId: operationId, paymentStatus: 'paid' }))
@@ -100,66 +124,71 @@ export default function FundNotes() {
             }
         } catch (err) {
             console.log("an error occured")
+        } finally {
+            dispatch(setLoader({ loader: false, loaderMessage: null }))
         }
     }
 
     return (
-        <div className="flex flex-col justify-center w-full">
-            <DrawerHeader>
-                <DrawerTitle className="text-center mt-4">Fund the Notes</DrawerTitle>
-                <DrawerDescription className="text-center">Fund your physical ecash notes with lightning</DrawerDescription>
-            </DrawerHeader>
-            <Stepper currentStep={4} />
-            <Alert className="max-w-md mt-6 mb-2 mx-auto border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
-                <div className="flex items-center justify-center gap-3 text-center">
-                    <i className="fa-solid fa-triangle-exclamation"></i>
-                    <AlertDescription>
-                        If someone scans your Paper Notes, they can redeem the funds.
-                    </AlertDescription>
-                </div>
-            </Alert>
-            <div className="text-center m-6">
-                <h3 className="text-xl font-semibold text-[#4B5971]">Total Fundable Amount: <b className="text-[#1C6FA7]">{totalAmount} sats</b></h3>
-                <p className="text-sm text-[#4B5563]">{totalExpression}</p>
-            </div>
-            {createdInvoice && <section className="max-w-md mx-auto mt-4 space-y-4 mb-4">
-                <div className="flex flex-col items-center p-6 border rounded-xl bg-white dark:bg-zinc-900 shadow-sm">
-                    <div className="p-4 bg-white rounded-lg border">
-                        <QRCode value={createdInvoice} size={160} bgColor="white" fgColor="black" />
+        <>
+            {loader && <Loader message={loaderMessage} />}
+            <div className="flex flex-col justify-center w-full">
+                <DrawerHeader>
+                    <DrawerTitle className="text-center mt-4">Fund the Notes</DrawerTitle>
+                    <DrawerDescription className="text-center">Fund your physical ecash notes with lightning</DrawerDescription>
+                </DrawerHeader>
+                <Stepper currentStep={4} />
+                <Alert className="max-w-md mt-6 mb-2 mx-auto border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+                    <div className="flex items-center justify-center gap-3 text-center">
+                        <i className="fa-solid fa-triangle-exclamation"></i>
+                        <AlertDescription>
+                            If someone scans your Paper Notes, they can redeem the funds.
+                        </AlertDescription>
                     </div>
+                </Alert>
+                <div className="text-center m-6">
+                    <h3 className="text-xl font-semibold text-[#4B5971]">Total Fundable Amount: <b className="text-[#1C6FA7]">{totalAmount} sats</b></h3>
+                    <p className="text-sm text-[#4B5563]">{totalExpression}</p>
+                </div>
+                {createdInvoice && <section className="max-w-md mx-auto mt-4 space-y-4 mb-4">
+                    <div className="flex flex-col items-center p-6 border rounded-xl bg-white dark:bg-zinc-900 shadow-sm">
+                        <div className="p-4 bg-white rounded-lg border">
+                            <QRCode value={createdInvoice} size={160} bgColor="white" fgColor="black" />
+                        </div>
 
-                    <p className="text-sm text-muted-foreground text-center mt-4">
-                        Scan this QR code with your wallet to fund the notes
-                    </p>
+                        <p className="text-sm text-muted-foreground text-center mt-4">
+                            Scan this QR code with your wallet to fund the notes
+                        </p>
 
-                    <div className="w-full mt-4">
-                        <p className="text-xs text-muted-foreground mb-1">Lightning Invoice</p>
+                        <div className="w-full mt-4">
+                            <p className="text-xs text-muted-foreground mb-1">Lightning Invoice</p>
 
-                        <div className="flex items-center gap-2 p-3 rounded-md bg-muted border text-xs break-all">
-                            <span className="flex-1 font-mono">
-                                {createdInvoice.slice(0, 50)}...
-                            </span>
+                            <div className="flex items-center gap-2 p-3 rounded-md bg-muted border text-xs break-all">
+                                <span className="flex-1 font-mono">
+                                    {createdInvoice.slice(0, 50)}...
+                                </span>
 
-                            <button
-                                className="px-2 py-1 text-xs rounded bg-primary text-primary-foreground hover:opacity-90"
-                                onClick={() =>
-                                    navigator.clipboard.writeText(createdInvoice)
-                                }
-                            >
-                                Copy
-                            </button>
+                                <button
+                                    className="px-2 py-1 text-xs rounded bg-primary text-primary-foreground hover:opacity-90"
+                                    onClick={() =>
+                                        navigator.clipboard.writeText(createdInvoice)
+                                    }
+                                >
+                                    Copy
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <p className="text-xs text-center text-muted-foreground">
-                    You can also paste the invoice into an external Lightning wallet to complete the payment.
-                </p>
-            </section>}
-            <DrawerFooter>
-                <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>Back</Button>
-                <p className="p-1 m-2 text-[#4B5971] text-sm text-center font-semibold cursor-pointer" onClick={getPaymentStatus}>Already Paid? Check payment status manually</p>
-            </DrawerFooter>
-        </div>
+                    <p className="text-xs text-center text-muted-foreground">
+                        You can also paste the invoice into an external Lightning wallet to complete the payment.
+                    </p>
+                </section>}
+                <DrawerFooter>
+                    <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>Back</Button>
+                    <p className="p-1 m-2 text-[#4B5971] text-sm text-center font-semibold cursor-pointer" onClick={getPaymentStatus}>Already Paid? Check payment status manually</p>
+                </DrawerFooter>
+            </div>
+        </>
     )
 }

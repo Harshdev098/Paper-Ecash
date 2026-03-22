@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import PaperMintLogo from '../assets/PaperMintLogoBlack.png'
 import { Button } from './ui/button'
+import { useNavigate } from 'react-router-dom'
 
 export default function MainNav() {
     const [isOpen, setIsOpen] = useState(false)
+    const navigate=useNavigate()
 
     return (
         <nav className='w-full px-6 md:px-10 py-3 bg-[#FAFAFA] shadow-md'>
             <div className='flex justify-between items-center'>
 
                 {/* Logo */}
-                <img src={PaperMintLogo} alt="PaperMint Logo" width="140px" />
+                <img src={PaperMintLogo} alt="PaperMint Logo" width="140px" onClick={()=>navigate('/')} />
 
                 {/* Desktop Menu */}
                 <ul className='hidden md:flex items-center font-medium text-[18px]'>

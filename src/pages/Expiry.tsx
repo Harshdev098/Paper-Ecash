@@ -23,7 +23,6 @@ export default function Expiry() {
             try {
                 const notes = await getNotesData(sessionId)
                 if (notes?.expiry) {
-                    // Convert back from seconds to days
                     setExpiry(notes.expiry / (24 * 60 * 60))
                 }
             } catch (err) {

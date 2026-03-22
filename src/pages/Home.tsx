@@ -7,10 +7,11 @@ import Fedimint from '../assets/Fedimint.png'
 import { useNavigate } from 'react-router-dom'
 import { motion } from "framer-motion";
 import { useRef, useState, useEffect } from 'react'
-import Preview from '../assets/Preview.png'
-import SelectFederation from '../assets/SelectFederation.png'
-import FundNotes from '../assets/FundNotes.png'
 import Footer from '@/components/Footer'
+import FundNotes from '@/assets/FundNotes.png'
+import NoteDenomination from '@/assets/NoteDenomination.png'
+import SelectDesign from '@/assets/SelectDesign.png'
+import SelectFederation from '@/assets/SelectFederation.png'
 
 
 const steps = [
@@ -19,7 +20,7 @@ const steps = [
     title: "Select Template",
     description:
       "Browse community-designed physical note templates or upload your own custom design.",
-    image: `${Preview}`,
+    image: `${SelectDesign}`,
   },
   {
     number: "02",
@@ -33,7 +34,7 @@ const steps = [
     title: "Pick Denominations",
     description:
       "Choose exact denominations and quantity of paper ecash notes to generate.",
-    image: `${FundNotes}`,
+    image: `${NoteDenomination}`,
   },
   {
     number: "04",
@@ -47,7 +48,7 @@ const steps = [
     title: "Download Printable PDF",
     description:
       "Receive a high-resolution, print-safe PDF containing beautifully designed paper ecash notes.",
-    image: `${Preview}`,
+    image: `${FundNotes}`,
   },
 ];
 

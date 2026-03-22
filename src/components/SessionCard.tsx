@@ -26,7 +26,7 @@ export default function SessionCard({ open, onClose }: SessionCardProps) {
     <FedimintManagerProvider>
       <Drawer open={open} onOpenChange={onClose}>
         <DrawerContent className="w-full rounded-2xl max-h-[80vh] flex flex-col">
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto relative">
             {STEPS[currentStep]}
           </div>
         </DrawerContent>
