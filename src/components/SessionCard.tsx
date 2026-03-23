@@ -6,6 +6,7 @@ import FundNotes from "@/pages/FundNotes"
 import { useSelector } from "react-redux"
 import type { RootState } from "@/redux/store"
 import { FedimintManagerProvider } from "@/context/FedimintManager"
+import DownloadPDF from "@/pages/DownloadPDF"
 
 interface SessionCardProps {
   open: boolean
@@ -19,7 +20,8 @@ export default function SessionCard({ open, onClose }: SessionCardProps) {
     1: <FederationSelecter />,
     2: <NoteDenomination />,
     3: <Expiry />,
-    4: <FundNotes />
+    4: <FundNotes />,
+    5: <DownloadPDF />
   }
 
   return (
