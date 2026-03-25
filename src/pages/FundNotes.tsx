@@ -87,15 +87,14 @@ export default function FundNotes() {
                 let invoiceToUse: string | null = null
                 const invoiceData = await searchInvoiceForOperation(wallet, operationId)
 
-                if (operationId && invoiceData?.amount === totalAmount) {
+                if (operationId && invoiceData?.amount === totalAmount && invoiceData.expired === false) {
                     invoiceToUse = invoiceData.invoice
                     setCreatedInvoice(invoiceData.invoice)
                     unsubscribe(operationId)
                 }
 
                 if (!invoiceToUse) {
-                    const notesData = await getNotesData(sessionId)
-                    const result = await createInvoice(wallet, totalAmount * 1000, notesData.expiry ?? 0)
+                    const result = await createInvoice(wallet, totalAmount * 1000)
 
                     dispatch(updateSessionThunk({ operationId: result.operation_id, upgradeStep: false }))
                     setCreatedInvoice(result.invoice)
@@ -137,7 +136,7 @@ export default function FundNotes() {
                     <DrawerTitle className="text-center mt-4">Fund the Notes</DrawerTitle>
                     <DrawerDescription className="text-center">Fund your physical ecash notes with lightning</DrawerDescription>
                 </DrawerHeader>
-                <Stepper currentStep={4} />
+                <Stepper currentStep={3} />
                 <Alert className="max-w-md mt-6 mb-2 mx-auto border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
                     <div className="flex items-center justify-center gap-3 text-center">
                         <i className="fa-solid fa-triangle-exclamation"></i>

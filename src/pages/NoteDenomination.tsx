@@ -174,7 +174,7 @@ export default function NoteDenomination() {
             <div className='flex justify-center items-center m-4'>
                 <Field className='max-w-sm'>
                     <FieldLabel>Custom denominations (in sats). eg: 1008, 5000, 10000</FieldLabel>
-                    <Input type="text" onChange={(e) => setSelectedDenomination(formatStringtoArray(e.target.value))} placeholder="Enter federation invite code" />
+                    <Input type="text" onChange={(e) => setSelectedDenomination(formatStringtoArray(e.target.value))} placeholder="Enter custom denomination in sats" />
                 </Field>
             </div>
 

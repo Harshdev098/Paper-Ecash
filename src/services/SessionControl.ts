@@ -4,7 +4,7 @@ import designs from '../../public/designs/json/designs'
 import type { AppDispatch } from "@/redux/store";
 import { updateLocalStep } from "@/redux/slices/SessionSlice";
 
-export const BUILD_STEP=5;
+export const BUILD_STEP=4;
 
 export const filterDraftSessions = async (): Promise<session[]> => {
     const db = await openedDB

@@ -40,37 +40,43 @@ export const fetchFormatedFederation = async (
     return formattedFederations;
 };
 
-export const createInvoice=async(wallet:Wallet, amountMsats:number,expiry:number):Promise<CreateBolt11Response>=>{
-    try{
+export const createInvoice = async (wallet: Wallet, amountMsats: number): Promise<CreateBolt11Response> => {
+    try {
         console.log("checking the federation")
-        const fed=await wallet.federation.getConfig()
-        console.log("the checked fed ",fed)
+        const fed = await wallet.federation.getConfig()
+        console.log("the checked fed ", fed)
         console.log("creating invoice now")
-        const invoiceResult=await wallet.lightning.createInvoice(amountMsats,'PaperEcash Notes Funding',expiry)
+        const invoiceResult = await wallet.lightning.createInvoice(amountMsats, 'PaperEcash Notes Funding')
         return invoiceResult;
-    }catch(err){
+    } catch (err) {
         throw err
     }
 }
 
-export const searchInvoiceForOperation=async(wallet:Wallet,operationId:string | null):Promise<LnTransaction | null>=>{
-    try{
-        const transaction=await wallet.federation.listTransactions()
-        let found=false
-        for(let tx of transaction){
-            if(tx.kind==='ln'){
-                if(tx.operationId===operationId){
-                    found=true
-                    const amount=(await parseBolt11Invoice((tx as LightningTransaction).invoice)).amount
-                    return {...(tx as LightningTransaction), amount};
+export const searchInvoiceForOperation = async (wallet: Wallet, operationId: string | null): Promise<LnTransaction | null> => {
+    try {
+        const transaction = await wallet.federation.listTransactions()
+        let found = false
+        for (let tx of transaction) {
+            if (tx.kind === 'ln') {
+                if (tx.operationId === operationId) {
+                    found = true
+                    const parsedInvoice = (await parseBolt11Invoice((tx as LightningTransaction).invoice))
+                    console.log("the parsed invoice is ", parsedInvoice)
+                    let amount = parsedInvoice.amount
+                    let expiry = parsedInvoice.expiry
+                    const now = Math.floor(Date.now() / 1000);
+                    const expiryTime = tx.timestamp + expiry;
+                    const expired = now > expiryTime;
+                    return { ...(tx as LightningTransaction), amount, expired };
                 }
             }
         }
-        if(found===false){
+        if (found === false) {
             return null;
         }
-    }catch(err){
-        console.log("an error occured ",err)
+    } catch (err) {
+        console.log("an error occured ", err)
     }
     return null;
 }

@@ -7,7 +7,6 @@ export default function Stepper({ currentStep }: StepperProps) {
     const steps = [
         "Choose Federation",
         "Select Note Denomination",
-        "Set optional expiry",
         "Fund the Notes",
         "Download PDF Notes"
     ]

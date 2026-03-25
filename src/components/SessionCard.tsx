@@ -1,7 +1,6 @@
 import { Drawer, DrawerContent } from "@/components/ui/drawer"
 import FederationSelecter from "@/pages/FederationSelecter"
 import NoteDenomination from "@/pages/NoteDenomination"
-import Expiry from "@/pages/Expiry"
 import FundNotes from "@/pages/FundNotes"
 import { useSelector } from "react-redux"
 import type { RootState } from "@/redux/store"
@@ -19,9 +18,8 @@ export default function SessionCard({ open, onClose }: SessionCardProps) {
   const STEPS: Record<number, React.ReactNode> = {
     1: <FederationSelecter />,
     2: <NoteDenomination />,
-    3: <Expiry />,
-    4: <FundNotes />,
-    5: <DownloadPDF />
+    3: <FundNotes />,
+    4: <DownloadPDF />
   }
 
   return (

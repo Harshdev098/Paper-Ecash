@@ -21,7 +21,8 @@ export type FormatedFederationData = FederationSummary & {
 }
 
 export type LnTransaction= LightningTransaction & {
-    amount:number
+    amount:number,
+    expired:boolean
 }
 
 export interface FederationRating {

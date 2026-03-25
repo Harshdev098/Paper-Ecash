@@ -17,7 +17,9 @@ export type Design = {
     path: string,
     designer: string,
     lnurl: string,
-    label: Label[]
+    label: Label[],
+    qr:{x:number,y:number,height:number,width:number},
+    denomination:{x:number,y:number,fontSize:number}
 }
 
 export type DesignResponse = {
@@ -44,7 +46,6 @@ export type notesPayload = {
     sessionId: string | null,
     federationId: string | null,
     notes: DenominationPerNote[],
-    expiry?: number | null,
     designId: number | null
 }
 
