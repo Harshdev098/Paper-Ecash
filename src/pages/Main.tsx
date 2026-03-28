@@ -17,6 +17,7 @@ import { useDispatch } from 'react-redux'
 import type { AppDispatch } from '@/redux/store'
 import { loadSessionThunk } from '@/redux/slices/SessionSlice'
 import SessionCard from '@/components/SessionCard'
+import { getSessionBySessionId } from '@/utils/db'
 
 
 export default function Main() {
@@ -33,10 +34,18 @@ export default function Main() {
     const sessionId = searchParams.get("id")
 
     useEffect(() => {
-        if (!sessionId) return;
-        console.log("extracted session id is ", sessionId)
+        const initSession = async () => {
+            if (!sessionId) return;
+            const sessionExist = await getSessionBySessionId(sessionId)
+            if (!sessionExist) {
+                searchParams.delete("id")
+                setSearchParams(searchParams)
+                return;
+            }
 
-        dispatch(loadSessionThunk(sessionId))
+            dispatch(loadSessionThunk(sessionId))
+        }
+        initSession()
     }, [sessionId])
 
     return (

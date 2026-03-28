@@ -18,7 +18,7 @@ export const fetchFormatedFederation = async (
 
     if (federationId) {
         const federation = await api.getFederation(federationId);
-        federations = [federation]; // normalize to array
+        federations = [federation];
     } else {
         federations = await api.getFederations();
     }
@@ -31,13 +31,20 @@ export const fetchFormatedFederation = async (
         const apiEndpoints = (config?.global as any)?.api_endpoints ?? {};
         const members = Object.keys(apiEndpoints).length;
 
-        formattedFederations.push({
-            ...fed,
-            members
-        });
+        if (fed.health === 'online' || fed.health === 'degraded') {
+            formattedFederations.push({
+                ...fed,
+                members
+            });
+        }
     }
 
-    return formattedFederations;
+    return formattedFederations.sort((a, b) => {
+        const avgA = a.nostr_votes?.avg ?? 0;
+        const avgB = b.nostr_votes?.avg ?? 0;
+
+        return avgB - avgA;
+    });
 };
 
 export const createInvoice = async (wallet: Wallet, amountMsats: number): Promise<CreateBolt11Response> => {

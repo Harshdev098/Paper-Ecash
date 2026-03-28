@@ -110,7 +110,7 @@ export default function FederationSelecter() {
                                     </ItemMedia>
 
                                     <ItemContent className="gap-1 min-w-0">
-                                        <ItemTitle>{fed.name}</ItemTitle>
+                                        <ItemTitle>{fed.name} {fed.nostr_votes.avg && <span className='font-bold px-2 text-base text-yellow-700 bg-yellow-100'><i className="fa-solid fa-star"></i>{fed.nostr_votes.avg?.toFixed(1)}</span>}</ItemTitle>
                                         <ItemDescription className='break-words'>{fed.id}</ItemDescription>
                                     </ItemContent>
 
@@ -140,7 +140,7 @@ export default function FederationSelecter() {
                                         <p><strong>Members</strong> {fed.members}</p>
                                         <p><strong>Holdings:</strong> {fed.deposits} sats</p>
                                         <p><strong>Status</strong> {fed.health}</p>
-                                        <p><strong>Ratings:</strong> {fed.nostr_votes.avg?.toFixed(2)}</p>
+                                        <p><strong>Ratings:</strong> {fed.nostr_votes.avg?.toFixed(1)}</p>
                                     </div>
                                 )}
                             </Item>

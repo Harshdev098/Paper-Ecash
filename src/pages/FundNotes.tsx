@@ -178,6 +178,14 @@ export default function FundNotes() {
                             </div>
                         </div>
                     </div>
+                    <Button
+                        className="w-full mt-3"
+                        onClick={() => {
+                            window.location.href = `lightning:${createdInvoice}`
+                        }}
+                    >
+                        Open in Wallet <i className="fa-solid fa-bolt"></i>
+                    </Button>
 
                     <p className="text-xs text-center text-muted-foreground">
                         You can also paste the invoice into an external Lightning wallet to complete the payment.
