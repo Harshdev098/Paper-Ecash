@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import type { DenominationPerNote } from "@/types/fedimint.type"
 import { getNotesData } from "@/utils/db"
 import QRCode from "react-qr-code"
-import { convertFromSat, createInvoice } from "@/services/Federation"
+import { convertFromSat, createInvoice, searchInvoiceForOperation } from "@/services/Federation"
 import { useFedimint } from "@/context/FedimintManager"
 import { updateSessionThunk } from "@/redux/slices/SessionSlice"
 import Stepper from "@/components/Stepper"
@@ -14,16 +14,10 @@ import { Button } from "@/components/ui/button"
 import { BackToStep } from "@/services/SessionControl"
 import { setLoader } from "@/redux/slices/LoaderSlice"
 import Loader from "@/components/Loader"
-import { isAlreadyProcessing, startPaymentSession } from "@/services/PaymentManager"
+import { isAlreadyProcessing, startPaymentSession, type InvoiceStatus } from "@/services/PaymentManager"
 
 export default function FundNotes() {
-    const {
-        sessionId,
-        walletId,
-        operationId: reduxOperationId,
-        paymentStatus,
-        currentStep
-    } = useSelector((state: RootState) => state.SessionSlice)
+    const { sessionId, walletId, operationId: reduxOperationId, paymentStatus, currentStep } = useSelector((state: RootState) => state.SessionSlice)
     const { loader, loaderMessage } = useSelector((state: RootState) => state.LoaderSlice)
     const [selectedDenominations, setSelectedDenomination] = useState<DenominationPerNote[]>([])
     const [createdInvoice, setCreatedInvoice] = useState<string | null>(null)
@@ -32,11 +26,11 @@ export default function FundNotes() {
     const { wallet } = useFedimint()
     const dispatch = useDispatch<AppDispatch>()
     const isRunningRef = useRef(false)
-    const {invoiceStatus,setInvoiceStatus}=useState<null | 'funded' | 'claimed' | 'claiming'>(null)
+    const [invoiceStatus, setInvoiceStatus] = useState<InvoiceStatus | null>(null)
 
     useEffect(() => {
         if (!sessionId) return
-        const load = async () => {
+        const loadDenomination = async () => {
             try {
                 dispatch(setLoader({ loader: true, loaderMessage: "Loading Selected Denomination" }))
                 const notesData = await getNotesData(sessionId)
@@ -47,7 +41,7 @@ export default function FundNotes() {
                 dispatch(setLoader({ loader: false, loaderMessage: null }))
             }
         }
-        load()
+        loadDenomination()
     }, [sessionId])
 
     const totalAmount = useMemo(() => {
@@ -74,57 +68,81 @@ export default function FundNotes() {
         if (walletStatus !== 'opened') return
         if (!wallet || !walletId || !sessionId || totalAmount === 0) return
         if (paymentStatus === 'paid') return
-
-        // In the main useEffect, update the reattach log:
-        if (reduxOperationId) {
-            if (!isAlreadyProcessing(reduxOperationId)) {
-                console.log(`[FundNotes] reattaching listener to existing op ${reduxOperationId}`)
-                startPaymentSession(wallet, reduxOperationId, () => {
-                    dispatch(updateSessionThunk({ operationId: reduxOperationId, paymentStatus: 'paid' }))
-                })
-            } else {
-                console.log(`[FundNotes] listener already active for ${reduxOperationId} — skipping`)
-            }
-            return
-        }
-
         if (isRunningRef.current) return
+
         isRunningRef.current = true
 
-        const run = async () => {
+        const handleInvoice = async () => {
             try {
                 dispatch(setLoader({ loader: true, loaderMessage: "Processing Invoice" }))
 
-                console.log("Creating invoice for", totalAmount, "sats")
+                const existingTx = reduxOperationId
+                    ? await searchInvoiceForOperation(wallet, reduxOperationId)
+                    : null
+
+                console.log("existing tx info:", existingTx)
+
+                const canReuse =
+                    existingTx &&
+                    !existingTx.expired &&
+                    existingTx.amount === totalAmount
+
+                if (canReuse && reduxOperationId) {
+                    console.log("reusing existing invoice for op:", reduxOperationId)
+                    setCreatedInvoice(existingTx!.invoice)
+                    setInvoiceStatus('waiting')
+
+                    if (!isAlreadyProcessing(reduxOperationId)) {
+                        startPaymentSession(
+                            wallet,
+                            reduxOperationId,
+                            () => dispatch(updateSessionThunk({ operationId: reduxOperationId, paymentStatus: 'paid' })),
+                            (status) => {
+                                setInvoiceStatus(status)
+                                if (status === 'canceled') {
+                                    isRunningRef.current = false
+                                }
+                            }
+                        )
+                    } else {
+                        console.log("listener already active — skipping")
+                    }
+                    return
+                }
+                if (existingTx?.expired) {
+                    console.log("invoice expired — creating new")
+                    setInvoiceStatus('canceled')
+                }
+
+                console.log("creating new invoice for", totalAmount, "sats")
                 const result = await createInvoice(wallet, Math.round(totalAmount * 1000))
                 const currentOpId = result.operation_id
 
                 startPaymentSession(
                     wallet,
                     currentOpId,
-                    () => {
-                        dispatch(updateSessionThunk({
-                            operationId: currentOpId,
-                            paymentStatus: 'paid'
-                        }))
+                    () => dispatch(updateSessionThunk({ operationId: currentOpId, paymentStatus: 'paid' })),
+                    (status) => {
+                        setInvoiceStatus(status)
+                        if (status === 'canceled') {
+                            isRunningRef.current = false
+                        }
                     }
                 )
 
-                dispatch(updateSessionThunk({
-                    operationId: currentOpId,
-                    upgradeStep: false
-                }))
-
+                dispatch(updateSessionThunk({ operationId: currentOpId, upgradeStep: false }))
                 setCreatedInvoice(result.invoice)
+                setInvoiceStatus('waiting')
+
             } catch (err) {
-                console.error("Invoice error:", err)
+                console.error("invoice error:", err)
                 isRunningRef.current = false
             } finally {
                 dispatch(setLoader({ loader: false, loaderMessage: null }))
             }
         }
 
-        run()
+        handleInvoice()
 
     }, [walletStatus, walletId, totalAmount, reduxOperationId])
 
@@ -170,8 +188,16 @@ export default function FundNotes() {
                         <b className="text-[#1C6FA7]">{totalAmount} sats</b>
                     </h3>
                     <p className="text-sm text-[#4B5563]">~ ${usdAmount}</p>
-                    <p></p>
                 </div>
+
+                {invoiceStatus && (
+                    <div
+                        className="mx-auto mt-4 flex items-center gap-2 px-4 py-2 rounded-full border border-blue-600 bg-blue-50 text-blue-800 text-sm font-medium w-fit"
+                    >
+                        <span className="capitalize">{invoiceStatus}</span>
+                    </div>
+                )}
+
                 {createdInvoice && (
                     <section className="max-w-md mx-auto mt-4 space-y-4 mb-4">
                         <div className="flex flex-col items-center p-6 border rounded-xl bg-white dark:bg-zinc-900 shadow-sm">

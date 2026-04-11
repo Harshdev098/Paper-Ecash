@@ -51,7 +51,7 @@ export const fetchFormatedFederation = async (
 
 export const createInvoice = async (wallet: Wallet, amountMsats: number): Promise<CreateBolt11Response> => {
     try {
-        console.log("creating invoice now",amountMsats)
+        console.log("creating invoice now", amountMsats)
         const nonce = Date.now().toString(36)
         const invoiceResult = await wallet.lightning.createInvoice(amountMsats, `PaperEcash Notes Funding ${nonce}`, 5 * 60)
         return invoiceResult;
@@ -90,12 +90,13 @@ export const searchInvoiceForOperation = async (wallet: Wallet, operationId: str
 
 export const getEcashToken = async (wallet: Wallet, amount: number): Promise<string> => {
     try {
-        console.log("getting ecash notes for amount ", amount)
+        console.log(`[Federation] spending ${amount} sats (${amount * 1000} msats)`)
         const notes = await wallet.mint.spendNotes(amount * 1000, Number.MAX_SAFE_INTEGER)
-        return notes.notes;
+        const token = notes.notes
+        return token
     } catch (err) {
-        console.log("an error occured while generating ecash notes", err)
-        throw err;
+        console.error(`getEcashToken error for ${amount} sats:`, err)
+        throw err
     }
 }
 

@@ -21,23 +21,26 @@ export function clearSession(operationId: string): void {
     activeSessions.delete(operationId)
 
     if (session.unsubscribe && !session.streamEnded) {
-        console.log(`[PaymentManager] deferring cancel_rpc for ${operationId}`)
+        console.log(`deferring cancel_rpc for ${operationId}`)
         Promise.resolve().then(() => {
             session.unsubscribe?.()
-            console.log(`[PaymentManager] cancel_rpc sent for ${operationId}`)
+            console.log(`cancel_rpc sent for ${operationId}`)
         })
     } else {
-        console.log(`[PaymentManager] skipping cancel_rpc for ${operationId} — stream already ended by WASM`)
+        console.log(`skipping cancel_rpc for ${operationId} — stream already ended`)
     }
 }
+
+export type InvoiceStatus = 'created' | 'waiting' | 'funded' | 'claiming' | 'claimed' | 'canceled' | 'error'
 
 export function startPaymentSession(
     wallet: Wallet,
     operationId: string,
-    onClaimed: () => void
+    onClaimed: () => void,
+    onStateChange?: (status: InvoiceStatus) => void
 ): void {
     if (activeSessions.has(operationId)) {
-        console.log(`[PaymentManager] already listening for ${operationId}`)
+        console.log(`already listening for ${operationId}`)
         return
     }
 
@@ -49,46 +52,58 @@ export function startPaymentSession(
     }
     activeSessions.set(operationId, session)
 
-    console.log(`[PaymentManager] subscribing to ${operationId}`)
+    console.log(`subscribing to ${operationId}`)
 
     const unsubscribe = wallet.lightning.subscribeLnReceive(
         operationId,
         (state: LnReceiveState) => {
-            console.log(`[PaymentManager] ${operationId} state:`, state)
+            console.log(`${operationId} state:`, state)
+
+            if (state === 'created') {
+                onStateChange?.('created')
+                return
+            }
+
+            if (state === 'funded') {
+                onStateChange?.('funded')
+                return
+            }
 
             if (state === 'claimed' && !session.claimed) {
                 session.claimed = true
-                // WASM stream ends naturally after claimed — mark it so
-                // clearSession won't send a redundant cancel_rpc
                 session.streamEnded = true
-                console.log(`[PaymentManager] ${operationId} claimed — firing onClaimed`)
+                onStateChange?.('claimed')
+                console.log(`${operationId} claimed — firing onClaimed`)
                 onClaimed()
                 clearSession(operationId)
                 return
             }
 
-            if (
-                typeof state === 'object' &&
-                state !== null &&
-                'canceled' in state
-            ) {
-                console.warn(`[PaymentManager] ${operationId} CANCELED by federation:`, state)
-                session.streamEnded = true
-                clearSession(operationId)
-                return
-            }
+            if (typeof state === 'object' && state !== null) {
+                if ('waiting_for_payment' in state) {
+                    onStateChange?.('waiting')
+                    console.log(`${operationId} waiting_for_payment — invoice live`)
+                    return
+                }
 
-            if (
-                typeof state === 'object' &&
-                state !== null &&
-                'waiting_for_payment' in state
-            ) {
-                console.log(`[PaymentManager] ${operationId} waiting_for_payment — invoice live`)
+                if ('awaiting_funds' in state) {
+                    onStateChange?.('claiming')
+                    return
+                }
+
+                if ('canceled' in state) {
+                    console.warn(`${operationId} CANCELED:`, state)
+                    session.streamEnded = true
+                    onStateChange?.('canceled')
+                    clearSession(operationId)
+                    return
+                }
             }
         },
         (err) => {
-            console.error(`[PaymentManager] ${operationId} subscribe error:`, err)
+            console.error(`${operationId} subscribe error:`, err)
             session.streamEnded = true
+            onStateChange?.('error')
             clearSession(operationId)
         }
     )
@@ -97,7 +112,7 @@ export function startPaymentSession(
 
     setTimeout(() => {
         if (!session.claimed) {
-            console.warn(`[PaymentManager] timeout cleanup for ${operationId}`)
+            console.warn(`timeout cleanup for ${operationId}`)
             clearSession(operationId)
         }
     }, 60 * 60 * 1000)

@@ -10,14 +10,14 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Community", "Regular"],
             qr: {
-                x: 166,
-                y: 199,
-                width: 479,
-                height: 475
+                x: 137,
+                y: 132,
+                width: 594,
+                height: 589
             },
             denomination: {
-                x: 790,
-                y: 393,
+                x: 768,
+                y: 392,
                 fontSize: 78,
             }
         },
@@ -29,10 +29,10 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Cypherpunk", "Event"],
             qr: {
-                x: 159,
-                y: 245,
-                width: 445,
-                height: 441
+                x: 110,
+                y: 214,
+                width: 557,
+                height: 552
             },
             denomination: {
                 x: 1221,
@@ -48,10 +48,10 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Gifts", "Regular"],
             qr: {
-                x: 224,
-                y: 256,
-                width: 389,
-                height: 385
+                x: 178,
+                y: 199,
+                width: 507,
+                height: 502
             },
             denomination: {
                 x: 128,
@@ -67,10 +67,10 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Community", "Event"],
             qr: {
-                x: 1257,
-                y: 299,
-                width: 306,
-                height: 303
+                x: 1210,
+                y: 274,
+                width: 366,
+                height: 363
             },
             denomination: {
                 x: 661,
@@ -86,10 +86,10 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Gifts", "Event", "Regular"],
             qr: {
-                x: 184,
-                y: 213,
-                width: 389,
-                height: 385
+                x: 125,
+                y: 165,
+                width: 480,
+                height: 476
             },
             denomination: {
                 x: 649,
