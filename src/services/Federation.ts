@@ -2,6 +2,8 @@ import { api } from '@/api/observerClient'
 import type { FormatedFederationData, LnTransaction } from '@/types/fedimint.type'
 import { getSessionBySessionId } from '@/utils/db';
 import { parseBolt11Invoice, type CreateBolt11Response, type LightningTransaction, type Wallet } from '@fedimint/core-web';
+const SATS_PER_BTC = 100_000_000;
+
 
 export const fetchFederationWithSessionId = async (sessionId: string) => {
     const federationId = await getSessionBySessionId(sessionId)
@@ -49,11 +51,9 @@ export const fetchFormatedFederation = async (
 
 export const createInvoice = async (wallet: Wallet, amountMsats: number): Promise<CreateBolt11Response> => {
     try {
-        console.log("checking the federation")
-        const fed = await wallet.federation.getConfig()
-        console.log("the checked fed ", fed)
-        console.log("creating invoice now")
-        const invoiceResult = await wallet.lightning.createInvoice(amountMsats, 'PaperEcash Notes Funding')
+        console.log("creating invoice now",amountMsats)
+        const nonce = Date.now().toString(36)
+        const invoiceResult = await wallet.lightning.createInvoice(amountMsats, `PaperEcash Notes Funding ${nonce}`, 5 * 60)
         return invoiceResult;
     } catch (err) {
         throw err
@@ -87,3 +87,38 @@ export const searchInvoiceForOperation = async (wallet: Wallet, operationId: str
     }
     return null;
 }
+
+export const getEcashToken = async (wallet: Wallet, amount: number): Promise<string> => {
+    try {
+        console.log("getting ecash notes for amount ", amount)
+        const notes = await wallet.mint.spendNotes(amount * 1000, Number.MAX_SAFE_INTEGER)
+        return notes.notes;
+    } catch (err) {
+        console.log("an error occured while generating ecash notes", err)
+        throw err;
+    }
+}
+
+const fetchExchangeRates = async () => {
+    try {
+        const res = await fetch(
+            'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
+        );
+        const data = await res.json();
+        if (data) {
+            localStorage.setItem('usdRate', data.bitcoin.usd);
+        }
+        return {
+            usd: data.bitcoin.usd ?? localStorage.getItem('usdRate'),
+        };
+    } catch (err) {
+        console.log('an error occured while fetching exchange rates', err);
+    }
+};
+
+export const convertFromSat = async (sats: number): Promise<number> => {
+    const btcValue = sats / SATS_PER_BTC;
+    const rates = await fetchExchangeRates();
+
+    return Number((btcValue * (rates?.usd || localStorage.getItem('usdRate'))).toFixed(4));
+};

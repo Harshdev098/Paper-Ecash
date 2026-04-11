@@ -15,55 +15,51 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
     const dispatch = useDispatch<AppDispatch>()
     const { walletStatus } = useSelector((state: RootState) => state.WalletSlice)
     const [wallet, setWallet] = useState<Wallet | undefined>(undefined)
-    const { walletId, currentStep } = useSelector((state: RootState) => state.SessionSlice)
+    const { walletId } = useSelector((state: RootState) => state.SessionSlice)
 
-    const initializeFedimintInstance = async () => {
+    const initializeFedimintInstance = async (id: string) => {
         try {
             dispatch(setWalletStatus('opening'))
-            const walletList = listClients()
+            setWallet(undefined)
             setLogLevel('debug')
-            console.log("walletList is ", walletList)
-            console.log("the wallet id and currentStep from the redux is ", walletId, currentStep)
-            if (walletId) {
-                const walletData = (await getWallet(walletId)) || (await openWallet(walletId));
-                console.log("wallet data is ", walletData)
-                dispatch(setWalletStatus('opened'))
-                setWallet(walletData)
-            }
+            const walletList = listClients()
+            console.log("walletList is", walletList)
+            console.log("initializing wallet for id:", id)
+
+            const walletData = (await getWallet(id)) || (await openWallet(id))
+            console.log("wallet data is", walletData)
+            dispatch(setWalletStatus('opened'))
+            setWallet(walletData)
         } catch (err) {
-            console.log("an error occured", err)
+            console.log("an error occurred", err)
             dispatch(setWalletStatus('closed'))
         }
     }
 
     const clearInstance = async () => {
-        if (walletStatus === 'opened') {
-            await wallet?.cleanup()
+        if (walletStatus === 'opened' && wallet) {
+            await wallet.cleanup()
+            setWallet(undefined)
+            dispatch(setWalletStatus('closed'))
         }
     }
 
     useEffect(() => {
         if (!walletId) return
-        initializeFedimintInstance()
+        initializeFedimintInstance(walletId)
     }, [walletId])
 
     useEffect(() => {
-        const handleBeforeUnload = () => {
-            clearInstance()
-        }
-
+        const handleBeforeUnload = () => { clearInstance() }
         window.addEventListener("beforeunload", handleBeforeUnload)
-
-        return () => {
-            window.removeEventListener("beforeunload", handleBeforeUnload)
-        }
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload)
     }, [walletStatus, wallet])
 
     return (
         <FedimintManagerContext.Provider value={{ wallet, clearInstance }}>
             {children}
         </FedimintManagerContext.Provider>
-    );
+    )
 }
 
 export const useFedimint = () => {

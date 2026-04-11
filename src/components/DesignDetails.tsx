@@ -5,7 +5,7 @@ import { labelConfig } from '@/utils/label'
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../redux/store';
 import { useSearchParams } from "react-router-dom";
-import { createSessionThunk } from "@/redux/slices/SessionSlice";
+import { createSessionThunk, resetSession } from "@/redux/slices/SessionSlice";
 import { searchDesignsInDraft } from "@/services/SessionControl";
 import { getAssetUrl } from "@/utils/url";
 
@@ -22,6 +22,7 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
 
     const createNewSession = () => {
         const sessionId = crypto.randomUUID()
+        dispatch(resetSession())
         if (sessionId && choosenDesign) {
             searchParams.set("id", sessionId)
             setSearchParams(searchParams)

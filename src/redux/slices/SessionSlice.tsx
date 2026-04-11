@@ -46,10 +46,17 @@ export const updateSessionThunk = createAsyncThunk(
         console.log("found the current session", current.sessionId, current.designId)
         console.log("updating the session", updates?.federationId, updates?.walletId, updates?.operationId)
 
+        const cleanUpdates = Object.fromEntries(
+            Object.entries(updates || {}).filter(([_, v]) => v !== undefined)
+        )
+
         const updatedSession: session = {
             ...current,
-            ...updates,
-            currentStep: updates?.upgradeStep === false ? current.currentStep : current.currentStep + 1,
+            ...cleanUpdates,
+            currentStep:
+                updates?.upgradeStep === false
+                    ? current.currentStep
+                    : current.currentStep + 1,
             updatedAt: new Date().toISOString()
         }
 
@@ -77,7 +84,14 @@ export const SessionSlice = createSlice({
     initialState,
     reducers: {
         updateLocalStep: (state, action: PayloadAction<number>) => {
-            state.currentStep = action.payload -1
+            state.currentStep = action.payload - 1
+        },
+        resetSession: (_state) => {
+            return { ...initialState }
+        },
+        clearOperationId: (state) => {
+            state.operationId = null
+            state.paymentStatus = 'pending'
         }
     },
     extraReducers: (builder) => {
@@ -115,5 +129,5 @@ export const SessionSlice = createSlice({
     }
 })
 
-export const { updateLocalStep } = SessionSlice.actions
+export const { updateLocalStep, resetSession, clearOperationId } = SessionSlice.actions
 export default SessionSlice.reducer;

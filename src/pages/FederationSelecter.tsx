@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '@/redux/store'
 import { setWalletStatus } from '@/redux/slices/WalletSlice'
-import { updateSessionThunk } from '@/redux/slices/SessionSlice'
+import { clearOperationId, updateSessionThunk } from '@/redux/slices/SessionSlice'
 import { generateMnemonic, getMnemonic, joinFederation } from '@fedimint/core-web'
 import { fetchFormatedFederation } from '@/services/Federation'
 import type { FormatedFederationData } from '@/types/fedimint.type'
@@ -23,7 +23,7 @@ export default function FederationSelecter() {
     const [isJoining, setIsJoining] = useState<boolean>(false)
     const dispatch = useDispatch<AppDispatch>()
     const [inviteCode, setInviteCode] = useState<string | null>(null)
-    const { sessionId, walletId, currentStep } = useSelector((state: RootState) => state.SessionSlice)
+    const { sessionId, currentStep } = useSelector((state: RootState) => state.SessionSlice)
     const { loader, loaderMessage } = useSelector((state: RootState) => state.LoaderSlice)
     const [federationList, setFederationList] = useState<FormatedFederationData[] | null>(null)
 
@@ -47,7 +47,7 @@ export default function FederationSelecter() {
     const selectFederation = async () => {
         try {
             if (!inviteCode) throw Error("Please enter Invite Code or select a Federation")
-            console.log("joining the federation", walletId, currentStep)
+            console.log("joining the federation", sessionId, currentStep)
             setIsJoining(true);
             dispatch(setLoader({ loader: true, loaderMessage: "Joining the selected Federation" }))
             let mnemonics = await getMnemonic();
@@ -57,6 +57,7 @@ export default function FederationSelecter() {
             }
             const result = await joinFederation(inviteCode, false, sessionId ?? undefined)
             console.log("federation joining result is ", result)
+            dispatch(clearOperationId())
             if (result) {
                 dispatch(setWalletStatus('opened'))
                 const federationId = await result.federation.getFederationId()

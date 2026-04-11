@@ -51,7 +51,7 @@ export default function Draft() {
                                         <CardDescription>
                                             - By {design.designer}
                                             <br />
-                                            <i className='p-2'>Continuing on {design.currentStep} step</i>
+                                            <i className='p-2'>Continue on step {design.currentStep}</i>
                                         </CardDescription>
 
                                         <div className="flex flex-wrap gap-2 mt-2">

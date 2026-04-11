@@ -13,7 +13,7 @@ interface SessionCardProps {
 }
 
 export default function SessionCard({ open, onClose }: SessionCardProps) {
-  const { currentStep } = useSelector((state: RootState) => state.SessionSlice)
+  const { currentStep, sessionId } = useSelector((state: RootState) => state.SessionSlice)
 
   const STEPS: Record<number, React.ReactNode> = {
     1: <FederationSelecter />,
@@ -23,7 +23,7 @@ export default function SessionCard({ open, onClose }: SessionCardProps) {
   }
 
   return (
-    <FedimintManagerProvider>
+    <FedimintManagerProvider key={sessionId ?? 'no-session'}>
       <Drawer open={open} onOpenChange={onClose}>
         <DrawerContent className="w-full rounded-2xl max-h-[80vh] flex flex-col">
           <div className="flex-1 overflow-y-auto relative">

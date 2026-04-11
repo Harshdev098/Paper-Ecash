@@ -9,6 +9,7 @@ function App() {
     useMemo(async()=>{
         if(!isInitialized){
             await initialize()
+            await indexedDB.deleteDatabase("PaperEcash")
             console.log("Fedimint SDK initialized")
         }
     },[])

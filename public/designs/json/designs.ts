@@ -10,15 +10,15 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Community", "Regular"],
             qr: {
-                x: 50,
-                y: 40,
-                width: 140,
-                height: 140
+                x: 166,
+                y: 199,
+                width: 479,
+                height: 475
             },
             denomination: {
-                x: 220,
-                y: 80,
-                fontSize: 28,
+                x: 790,
+                y: 393,
+                fontSize: 78,
             }
         },
         {
@@ -29,15 +29,15 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Cypherpunk", "Event"],
             qr: {
-                x: 50,
-                y: 40,
-                width: 140,
-                height: 140
+                x: 159,
+                y: 245,
+                width: 445,
+                height: 441
             },
             denomination: {
-                x: 220,
-                y: 80,
-                fontSize: 28,
+                x: 1221,
+                y: 726,
+                fontSize: 72,
             }
         },
         {
@@ -48,15 +48,15 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Gifts", "Regular"],
             qr: {
-                x: 50,
-                y: 40,
-                width: 140,
-                height: 140
+                x: 224,
+                y: 256,
+                width: 389,
+                height: 385
             },
             denomination: {
-                x: 220,
-                y: 80,
-                fontSize: 28,
+                x: 128,
+                y: 755,
+                fontSize: 58,
             }
         },
         {
@@ -67,15 +67,15 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Community", "Event"],
             qr: {
-                x: 50,
-                y: 40,
-                width: 140,
-                height: 140
+                x: 1257,
+                y: 299,
+                width: 306,
+                height: 303
             },
             denomination: {
-                x: 220,
-                y: 80,
-                fontSize: 28,
+                x: 661,
+                y: 636,
+                fontSize: 72,
             }
         },
         {
@@ -86,18 +86,21 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Gifts", "Event", "Regular"],
             qr: {
-                x: 50,
-                y: 40,
-                width: 140,
-                height: 140
+                x: 184,
+                y: 213,
+                width: 389,
+                height: 385
             },
             denomination: {
-                x: 220,
-                y: 80,
-                fontSize: 28,
+                x: 649,
+                y: 393,
+                fontSize: 72,
             }
         },
     ]
 }
+
+export const FIGMA_DESIGN_WIDTH = 1748;
+export const FIGMA_DESIGN_HEIGHT = 874;
 
 export default data;

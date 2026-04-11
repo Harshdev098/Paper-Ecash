@@ -7,10 +7,12 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/c
 import { Badge } from './ui/badge'
 import { labelConfig } from '@/utils/label'
 import { getAssetUrl } from '@/utils/url'
+import { useSearchParams } from 'react-router-dom'
 
 
 export default function Builds() {
     const [builds, setBuilds] = useState<DraftDesign[] | null>(null)
+    const [searchParams, setSearchParams] = useSearchParams()
 
     useMemo(async () => {
         const draftSessions = await filterBuildSession()
@@ -56,16 +58,15 @@ export default function Builds() {
                                         </div>
                                     </CardHeader>
 
-                                    <CardFooter>
+                                    <CardFooter className='flex flex-col gap-1'>
                                         <Button
                                             className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-base font-semibold"
+                                            onClick={() => {
+                                                searchParams.set("id", design.sessionId)
+                                                setSearchParams(searchParams)
+                                            }}
                                         >
-                                            Download PDF
-                                        </Button>
-                                        <Button
-                                            className="w-full text-pink-600 hover:bg-pink-100 hover:text-pink-700 text-base font-semibold"
-                                        >
-                                            Support Designer
+                                            Open Build
                                         </Button>
                                     </CardFooter>
                                 </Card>
