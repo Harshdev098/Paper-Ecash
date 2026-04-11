@@ -32,6 +32,7 @@ export default function FundNotes() {
     const { wallet } = useFedimint()
     const dispatch = useDispatch<AppDispatch>()
     const isRunningRef = useRef(false)
+    const {invoiceStatus,setInvoiceStatus}=useState<null | 'funded' | 'claimed' | 'claiming'>(null)
 
     useEffect(() => {
         if (!sessionId) return
@@ -74,14 +75,15 @@ export default function FundNotes() {
         if (!wallet || !walletId || !sessionId || totalAmount === 0) return
         if (paymentStatus === 'paid') return
 
+        // In the main useEffect, update the reattach log:
         if (reduxOperationId) {
             if (!isAlreadyProcessing(reduxOperationId)) {
-                console.log("Reattaching listener to existing operation")
+                console.log(`[FundNotes] reattaching listener to existing op ${reduxOperationId}`)
                 startPaymentSession(wallet, reduxOperationId, () => {
                     dispatch(updateSessionThunk({ operationId: reduxOperationId, paymentStatus: 'paid' }))
                 })
             } else {
-                console.log("Listener already active — skipping")
+                console.log(`[FundNotes] listener already active for ${reduxOperationId} — skipping`)
             }
             return
         }
@@ -114,7 +116,6 @@ export default function FundNotes() {
                 }))
 
                 setCreatedInvoice(result.invoice)
-
             } catch (err) {
                 console.error("Invoice error:", err)
                 isRunningRef.current = false
@@ -125,7 +126,7 @@ export default function FundNotes() {
 
         run()
 
-    }, [walletStatus, wallet?.id, walletId, sessionId, totalAmount, reduxOperationId, paymentStatus])
+    }, [walletStatus, walletId, totalAmount, reduxOperationId])
 
     const getPaymentStatus = async () => {
         if (!wallet || !reduxOperationId) return
@@ -169,6 +170,7 @@ export default function FundNotes() {
                         <b className="text-[#1C6FA7]">{totalAmount} sats</b>
                     </h3>
                     <p className="text-sm text-[#4B5563]">~ ${usdAmount}</p>
+                    <p></p>
                 </div>
                 {createdInvoice && (
                     <section className="max-w-md mx-auto mt-4 space-y-4 mb-4">

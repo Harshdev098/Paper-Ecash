@@ -122,7 +122,7 @@ async function renderNoteToCanvas(
 
     const scaleX = noteW / 1748
     const scaleY = noteH / 874
-
+    console.log("the ecash token is ",ecashToken)
     const qrSize = Math.round(design.qr.width * scaleX)
     const qrCanvas = document.createElement('canvas')
     await QRCode.toCanvas(qrCanvas, ecashToken, {

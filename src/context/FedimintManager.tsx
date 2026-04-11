@@ -20,18 +20,30 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
     const initializeFedimintInstance = async (id: string) => {
         try {
             dispatch(setWalletStatus('opening'))
-            setWallet(undefined)
             setLogLevel('debug')
-            const walletList = listClients()
-            console.log("walletList is", walletList)
-            console.log("initializing wallet for id:", id)
 
-            const walletData = (await getWallet(id)) || (await openWallet(id))
-            console.log("wallet data is", walletData)
-            dispatch(setWalletStatus('opened'))
+            const walletList = listClients()
+            console.log("[FedimintManager] known wallet clients:", walletList)
+            console.log("[FedimintManager] initializing wallet for id:", id)
+
+            // Try getWallet first (returns already-open instance),
+            // fall back to openWallet (opens persisted wallet from storage).
+            // Do NOT set wallet to undefined before this — if we're reusing
+            // the same wallet ID as a prior session, we want a clean handoff.
+            let walletData = await getWallet(id)
+            if (!walletData) {
+                console.log("[FedimintManager] wallet not open, calling openWallet")
+                walletData = await openWallet(id)
+            }
+
+            if (!walletData) throw new Error(`Could not open wallet ${id}`)
+
+            console.log("[FedimintManager] wallet ready:", walletData.id)
             setWallet(walletData)
+            dispatch(setWalletStatus('opened'))
         } catch (err) {
-            console.log("an error occurred", err)
+            console.error("[FedimintManager] error initializing wallet:", err)
+            setWallet(undefined)
             dispatch(setWalletStatus('closed'))
         }
     }
@@ -46,6 +58,7 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
 
     useEffect(() => {
         if (!walletId) return
+        console.log("[FedimintManager] walletId changed, reinitializing:", walletId)
         initializeFedimintInstance(walletId)
     }, [walletId])
 
@@ -63,11 +76,11 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
 }
 
 export const useFedimint = () => {
-    const context = useContext(FedimintManagerContext);
+    const context = useContext(FedimintManagerContext)
     if (!context) {
-        throw new Error('useWallet must be used within WalletProvider');
+        throw new Error('useFedimint must be used within FedimintManagerProvider')
     }
-    return context;
-};
+    return context
+}
 
-export default FedimintManagerContext;
+export default FedimintManagerContext
