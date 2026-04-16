@@ -37,3 +37,7 @@ A Web-Based Physical Ecash Issuance System for Fedimint
   ```
     npm run dev
   ```
+
+## Adding a Paper Note Design
+
+Read the [Designer Guide](./DesignerGuide.md) to get the detailed overview for adding the note designs and calculating the qr alignment dimenstions.
