@@ -1,5 +1,3 @@
-import type { DenominationPerNote } from "./fedimint.type"
-
 export const LABELS = [
     'Community',
     'Other',
@@ -43,20 +41,19 @@ export type CreateSessionPayload = {
 }
 
 export type notesPayload = {
-    sessionId: string | null,
-    federationId: string | null,
-    notes: DenominationPerNote[],
+    sessionId: string | null
+    federationId: string | null
+    noteMsats: number[]
+    noteCount: number
     designId: number | null
-}
-
-export type NotesData = {
-    notes: DenominationPerNote[],
-    federation_id: string,
-    session_id: string,
-    expiry: number
 }
 
 export type DraftDesign = Design & {
   sessionId: string,
   currentStep:number
+}
+
+export type EcashData={
+    sessionId:string,
+    operationId:string[]
 }

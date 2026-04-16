@@ -2,90 +2,55 @@ import { Button } from "@/components/ui/button";
 import { DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FastAverageColor } from "fast-average-color";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { extractDesign } from "@/services/SessionControl";
-import { getAssetUrl } from "@/utils/url";
-import QRCode from "react-qr-code";
 import { getNotesData } from "@/utils/db";
-import type { DenominationPerNote } from "@/types/fedimint.type";
 import { setLoader } from "@/redux/slices/LoaderSlice"
 import Loader from "@/components/Loader";
 import { generateNotesPDF, getSmartColors } from "@/services/NotesDownloader";
 import { useFedimint } from "@/context/FedimintManager";
 import { convertFromSat } from "@/services/Federation";
+import PreviewDesign from "@/components/PreviewDesign";
+import ReclaimNotes from "@/components/ReclaimNotes";
 
 
 export default function DownloadPDF() {
     const dispatch = useDispatch<AppDispatch>()
     const [bgColor, setBgColor] = useState("#eff6ff");
     const { designId, sessionId } = useSelector((state: RootState) => state.SessionSlice)
-    const [selectedDenominations, setSelectedDenomination] = useState<DenominationPerNote[]>([])
     const design = designId ? extractDesign(designId) : null;
     const [dpi, setDpi] = useState<"300" | "72" | "150">("300");
     const [printSize, setPrintSize] = useState<"a4" | "letter" | "a5">('a4')
-    const [renderSize, setRenderSize] = useState({ width: 1, height: 1 });
-    const [naturalSize, setNaturalSize] = useState({ width: 1748, height: 874 });
     const [qrColors, setQrColors] = useState({ bg: "#ffffff", fg: "#000000" });
     const { loader, loaderMessage } = useSelector((state: RootState) => state.LoaderSlice)
     const [usdAmount, setUSDAmount] = useState<number>(0)
+    const [noteMsats, setNoteMsats] = useState<number[]>([])
+    const [noteCount, setNoteCount] = useState(1)
+    const noteTotalMsats = noteMsats.reduce((s, m) => s + m, 0)
+    const totalSats = (noteTotalMsats * noteCount) / 1000
     const { wallet } = useFedimint()
-
-    const scaleX = renderSize.width / naturalSize.width;
-    const scaleY = renderSize.height / naturalSize.height;
-
     const imgRef = useRef<HTMLImageElement | null>(null);
-    const observerRef = useRef<ResizeObserver | null>(null);
-
-    const setImgRef = useCallback((node: HTMLImageElement | null) => {
-        if (observerRef.current) {
-            observerRef.current.disconnect();
-            observerRef.current = null;
-        }
-
-        if (!node) {
-            imgRef.current = null;
-            return;
-        }
-
-        imgRef.current = node;
-
-        const observer = new ResizeObserver((entries) => {
-            const rect = entries[0].contentRect;
-            setRenderSize({ width: rect.width, height: rect.height });
-        });
-        observer.observe(node);
-        observerRef.current = observer;
-    }, []);
-
+    const [reclaimWindow, setReclaimWindow] = useState(false)
 
     useEffect(() => {
-        const loadSelectedDenomination = async () => {
-            if (sessionId) {
-                try {
-                    dispatch(setLoader({ loader: true, loaderMessage: "Loading Selected Denomination" }))
-                    const notesData = await getNotesData(sessionId)
-                    setSelectedDenomination(notesData.notes)
-                } catch (err) {
-                    console.log(err)
-                } finally {
-                    dispatch(setLoader({ loader: false, loaderMessage: null }))
+        const load = async () => {
+            if (!sessionId) return
+            try {
+                dispatch(setLoader({ loader: true, loaderMessage: "Loading denomination" }))
+                const saved = await getNotesData(sessionId)
+                console.log("the saved notes data are",saved)
+                if (saved) {
+                    setNoteMsats(saved.noteMsats ?? [])
+                    setNoteCount(saved.noteCount ?? 1)
                 }
-            }
+            } catch (err) { console.log(err) }
+            finally { dispatch(setLoader({ loader: false, loaderMessage: null })) }
         }
-
-        loadSelectedDenomination()
+        load()
     }, [sessionId])
-
-    const totalAmount = useMemo(() => {
-        const total = selectedDenominations.reduce(
-            (sum, item) => sum + item.denomination * item.quantity,
-            0
-        )
-        return Number(total.toFixed(2))
-    }, [selectedDenominations])
 
     useEffect(() => {
         const img = imgRef.current;
@@ -94,11 +59,6 @@ export default function DownloadPDF() {
         const fac = new FastAverageColor();
 
         const handleLoad = async () => {
-            setNaturalSize({
-                width: img.naturalWidth,
-                height: img.naturalHeight,
-            });
-
             try {
                 const color = await fac.getColorAsync(img);
                 const colors = getSmartColors(img);
@@ -133,27 +93,25 @@ export default function DownloadPDF() {
     useEffect(() => {
         const getUSDAmount = async () => {
             try {
-                const usdValue = await convertFromSat(totalAmount)
-
-        const balance=await wallet?.balance.getBalance()
-        const tx=await wallet?.federation.listTransactions()
-        console.log("the balance is ",balance,wallet,wallet?.id,wallet?.federationId,tx)
+                const usdValue = await convertFromSat(totalSats)
                 setUSDAmount(usdValue)
             } catch (err) {
                 console.log("an error occured while converting sats to usd", err)
             }
         }
         getUSDAmount()
-    }, [totalAmount,wallet])
+    }, [totalSats, wallet])
 
     const DownloadPDF = async () => {
         try {
             if (!wallet) throw new Error("Wallet not found")
             if (!design) throw new Error("design not found")
+            if(!sessionId) throw new Error("session not found")
+            if (noteMsats.length === 0) throw new Error("Note composition not found")
             dispatch(setLoader({ loader: true, loaderMessage: "Creating and downloading the PDF" }))
-            await generateNotesPDF(design, selectedDenominations, dpi, printSize, qrColors.fg, qrColors.bg, wallet)
+            await generateNotesPDF(design, sessionId, noteMsats, noteCount, dpi, printSize, qrColors.fg, qrColors.bg, wallet)
         } catch (err) {
-            console.log("an error occured while downloading pdf ", err)
+            console.log("error downloading pdf", err)
         } finally {
             dispatch(setLoader({ loader: false, loaderMessage: null }))
         }
@@ -170,50 +128,7 @@ export default function DownloadPDF() {
                     }}
                 >
                     <div className="w-full flex justify-center items-center pb-8 px-4">
-                        <div className="relative inline-block" key={design?.path}>
-                            <img
-                                ref={setImgRef}
-                                src={getAssetUrl(design?.path ?? '')}
-                                alt="Ecash Notes"
-                                crossOrigin="anonymous"
-                                className="block w-full h-auto drop-shadow-lg"
-                            />
-                            {design && (
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        left: design.qr.x * scaleX,
-                                        top: design.qr.y * scaleY,
-                                        width: design.qr.width * scaleX,
-                                        height: design.qr.height * scaleY,
-                                    }}
-                                >
-                                    <QRCode
-                                        value={design.lnurl}
-                                        bgColor={qrColors.bg}
-                                        fgColor={qrColors.fg}
-                                        style={{ width: "100%", height: "100%" }}
-                                    />
-                                </div>
-                            )}
-                            {design && (
-                                <h2
-                                    style={{
-                                        position: "absolute",
-                                        left: design.denomination.x * scaleX,
-                                        top: design.denomination.y * scaleY,
-                                        fontSize: design.denomination.fontSize * scaleX,
-                                        fontWeight: "bold",
-                                        color: qrColors.fg,
-                                        margin: 0,
-                                        lineHeight: 1,
-                                        whiteSpace: "nowrap",
-                                    }}
-                                >
-                                    {totalAmount} SATS
-                                </h2>
-                            )}
-                        </div>
+                        <PreviewDesign design={design} totalSats={totalSats} />
                     </div>
                 </div>
 
@@ -228,7 +143,7 @@ export default function DownloadPDF() {
                     </DrawerHeader>
 
                     <div className="text-center m-6">
-                        <h3 className="text-xl font-semibold text-[#4B5971]">Amount: <b className="text-[#1C6FA7]">{totalAmount} sats</b></h3>
+                        <h3 className="text-xl font-semibold text-[#4B5971]">Amount: <b className="text-[#1C6FA7]">{totalSats} sats</b></h3>
                         <p className="text-sm text-[#4B5563]">~ ${usdAmount}</p>
                     </div>
                     <div className="mt-4">
@@ -292,9 +207,17 @@ export default function DownloadPDF() {
                         >
                             <i className="fa-solid fa-hand-holding-heart text-base"></i> Support Designer
                         </Button>
+                        <Button
+                            type="button"
+                            className=" bg-white border border-[#319BD9] hover:bg-white text-[#319BD9] text-base font-semibold"
+                            onClick={() => setReclaimWindow(true)}
+                        >
+                            <i className="fa-solid fa-rotate-left"></i> Reclaim Notes
+                        </Button>
                     </DrawerFooter>
                 </div>
             </section>
+            {reclaimWindow && <ReclaimNotes wallet={wallet} noteTotalMsats={noteTotalMsats/1000} sessionId={sessionId ?? ''} />}
         </>
     );
 }

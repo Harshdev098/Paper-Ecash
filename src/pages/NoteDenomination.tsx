@@ -1,143 +1,125 @@
-import { useFedimint } from '@/context/FedimintManager'
 import type { AppDispatch, RootState } from '@/redux/store'
 import { useDispatch, useSelector } from 'react-redux'
 import { DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader } from '@/components/ui/card'
-import { Field, FieldLabel } from "@/components/ui/field"
-import QRCode from 'react-qr-code';
-import { Input } from '@/components/ui/input'
-import Stepper from "@/components/Stepper";
-import { useEffect, useMemo, useState } from "react";
-import type { DenominationPerNote } from "@/types/fedimint.type";
-import { getNotesData, getSessionBySessionId, saveNotesToDB } from "@/utils/db";
+import Stepper from "@/components/Stepper"
+import { useEffect, useMemo, useState } from "react"
+import { getNotesData, getSessionBySessionId, saveNotesToDB } from "@/utils/db"
 import { updateSessionThunk } from '@/redux/slices/SessionSlice'
 import { BackToStep } from '@/services/SessionControl'
 import Loader from '@/components/Loader'
 import { setLoader } from '@/redux/slices/LoaderSlice'
+import { Input } from '@/components/ui/input'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { convertFromSat } from '@/services/Federation'
 
+const MINT_DENOMINATIONS = [
+    { msats: 1024,       label: '1.02 sat' },
+    { msats: 2048,       label: '2.05 sat' },
+    { msats: 4096,       label: '4.10 sat' },
+    { msats: 8192,       label: '8.19 sat' },
+    { msats: 16384,      label: '16.4 sat' },
+    { msats: 32768,      label: '32.8 sat' },
+    { msats: 65536,      label: '65.5 sat' },
+    { msats: 131072,     label: '131 sat' },
+    { msats: 262144,     label: '262 sat' },
+    { msats: 524288,     label: '524 sat' },
+    { msats: 1048576,    label: '1.05 ksat' },
+    { msats: 2097152,    label: '2.10 ksat' },
+    { msats: 4194304,    label: '4.19 ksat' },
+    { msats: 8388608,    label: '8.39 ksat' },
+    { msats: 16777216,   label: '16.8 ksat' },
+    { msats: 33554432,   label: '33.6 ksat' },
+    { msats: 67108864,   label: '67.1 ksat' },
+    { msats: 134217728,  label: '134 ksat' },
+    { msats: 268435456,  label: '268 ksat' },
+    { msats: 536870912,  label: '537 ksat' },
+    { msats: 1073741824, label: '1.07 Msat' },
+]
+
+const MAX_DENOMS_PER_NOTE = 4
 
 export default function NoteDenomination() {
     const { walletId, sessionId, designId, currentStep } = useSelector((state: RootState) => state.SessionSlice)
     const { loader, loaderMessage } = useSelector((state: RootState) => state.LoaderSlice)
-    const { wallet } = useFedimint()
     const dispatch = useDispatch<AppDispatch>()
-    const [denominationList, setDenominationList] = useState<number[]>([])
-    const [selectedDenominations, setSelectedDenomination] = useState<DenominationPerNote[]>([])
-
-    const NoteDenominationList = () => {
-        let start = 1.02
-        let final = 18000000
-        const denominations: number[] = []
-        let current = start
-        while (current < final) {
-            denominations.push(current)
-            current = 2 * current
-        }
-        setDenominationList(denominations)
-    }
-
-    const formatSats = (value: number) => {
-        if (value >= 1_000_000) {
-            return (value / 1_000_000).toFixed(2) + "M"
-        }
-
-        if (value >= 1_000) {
-            return (value / 1_000).toFixed(2) + "K"
-        }
-
-        return value.toFixed(2)
-    }
+    const [noteMsats, setNoteMsats] = useState<number[]>([])
+    const [noteCount, setNoteCount] = useState(1)
+    const [usdAmount, setUsdAmount] = useState(0)
 
     useEffect(() => {
-        NoteDenominationList()
-    }, [])
-
-    useEffect(() => {
-        const loadPreviousNotes = async () => {
-            if (!sessionId) return
+        if (!sessionId) return
+        const load = async () => {
             try {
                 dispatch(setLoader({ loader: true, loaderMessage: null }))
                 const saved = await getNotesData(sessionId)
-                if (saved?.notes?.length) {
-                    setSelectedDenomination(saved.notes)
+                if (saved) {
+                    setNoteMsats(saved.noteMsats ?? [])
+                    setNoteCount(saved.noteCount ?? 1)
                 }
             } catch (err) {
-                console.log("Could not load previous denominations", err)
+                console.log("[NoteDenomination] load error:", err)
             } finally {
                 dispatch(setLoader({ loader: false, loaderMessage: null }))
             }
         }
-        loadPreviousNotes()
+        load()
     }, [sessionId])
 
-
-    const toggleDenomination = (value: number) => {
-        console.log("toggling denomination", value)
-        setSelectedDenomination(prev => {
-            const exists = prev.find(d => d.denomination === value)
-            if (exists) {
-                console.log("denomination exists", exists)
-                return prev.filter(d => d.denomination !== value)
-            }
-            return [...prev, { denomination: value, quantity: 1 }]
+    const toggleDenom = (msats: number) => {
+        setNoteMsats(prev => {
+            if (prev.includes(msats)) return prev.filter(m => m !== msats)
+            if (prev.length >= MAX_DENOMS_PER_NOTE) return prev
+            return [...prev, msats]
         })
     }
 
-    const totalAmount = useMemo(() => {
-        const total = selectedDenominations.reduce(
-            (sum, item) => sum + item.denomination * item.quantity,
-            0
-        )
+    // Total msats for ONE paper note
+    const noteTotalMsats = useMemo(
+        () => noteMsats.reduce((s, m) => s + m, 0),
+        [noteMsats]
+    )
 
-        return Number(total.toFixed(2))
-    }, [selectedDenominations])
+    // Total sats across all copies (for invoice)
+    const totalSats = useMemo(
+        () => (noteTotalMsats * noteCount) / 1000,
+        [noteTotalMsats, noteCount]
+    )
 
-    const totalExpression = useMemo(() => {
-        const expr = selectedDenominations
-            .map(item => `${item.denomination} X ${item.quantity}`)
-            .join(" + ")
+    useEffect(() => {
+        if (totalSats === 0) return
+        convertFromSat(totalSats)
+            .then(setUsdAmount)
+            .catch(err => console.log("[NoteDenomination] USD conversion error:", err))
+    }, [totalSats])
 
-        return `(${expr})`
-    }, [selectedDenominations])
-
-    const updateQuantity = (value: number, quantity: number) => {
-        setSelectedDenomination(prev =>
-            prev.map(d =>
-                d.denomination === value ? { ...d, quantity } : d
-            )
-        )
+    const formatMsats = (msats: number) => {
+        const sats = msats / 1000
+        if (sats >= 1_000_000) return (sats / 1_000_000).toFixed(2) + ' Msat'
+        if (sats >= 1_000) return (sats / 1_000).toFixed(2) + ' ksat'
+        return sats.toFixed(2) + ' sat'
     }
 
-    const isSelected = (value: number) =>
-        selectedDenominations.some(d => d.denomination === value)
-
-    const formatStringtoArray = (s: string): DenominationPerNote[] => {
-        if (!s.trim()) return []
-
-        return s.split(",")
-            .map(val => Number(val.trim()))
-            .filter(num => !isNaN(num))
-            .map(num => ({
-                denomination: num,
-                quantity: 1
-            }))
-    }
-
-    const updateSessionWithNotes = async () => {
+    const saveAndProceed = async () => {
         try {
-            if (selectedDenominations.length == 0) throw new Error("Please select a denomination")
+            if (noteMsats.length === 0) throw new Error("Select at least one denomination")
+            if (noteCount < 1) throw new Error("Need at least 1 note")
+            if (!sessionId || !walletId) throw new Error("Session not initialized")
+
             dispatch(setLoader({ loader: true, loaderMessage: null }))
-            if (sessionId && walletId) {
-                console.log("the data in updating the session with notes is ", sessionId, walletId, wallet?.id)
-                const session = await getSessionBySessionId(sessionId)
-                await saveNotesToDB({ sessionId, notes: selectedDenominations, federationId: session?.federationId ?? '', designId })
-                dispatch(updateSessionThunk())
-            } else {
-                console.log("wallet id or session id not found", sessionId, walletId, wallet?.id)
-            }
+            const session = await getSessionBySessionId(sessionId)
+
+            await saveNotesToDB({
+                sessionId,
+                noteMsats,
+                noteCount,
+                federationId: session?.federationId ?? '',
+                designId,
+            })
+
+            dispatch(updateSessionThunk())
         } catch (err) {
-            console.log("an error occured while updating session", err)
+            console.log("[NoteDenomination] save error:", err)
         } finally {
             dispatch(setLoader({ loader: false, loaderMessage: null }))
         }
@@ -149,80 +131,102 @@ export default function NoteDenomination() {
             <DrawerHeader>
                 <DrawerTitle className='text-center text-2xl'>Select Note Denomination</DrawerTitle>
                 <DrawerDescription className='text-center'>
-                    Choose the note denomination and number of notes you wanted to print
+                    Select up to {MAX_DENOMS_PER_NOTE} denominations per paper note.
+                    Each is a single mint-native ecash note.
                 </DrawerDescription>
             </DrawerHeader>
+
             <div className='m-4'>
                 <Stepper currentStep={2} />
             </div>
-            <section className="w-full max-w-xl mx-auto m-12">
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 m-2">
-                    {denominationList.map((value, index) => (
-                        <div
-                            key={index}
-                            className={`${isSelected(value) ? 'bg-blue-500 text-white' : ''} flex items-center justify-center border-2 border-blue-400 rounded-lg text-[#4B5971] font-medium py-3 cursor-pointer transition-all duration-200 hover:scale-110`}
-                            onClick={() => toggleDenomination(value)}
-                        >
-                            {formatSats(value)}
-                        </div>
-                    ))}
+
+            <section className="w-full max-w-xl mx-auto mt-4 px-4">
+                <p className="text-sm text-muted-foreground mb-3 text-center">
+                    Composing <b>one</b> paper note ({noteMsats.length}/{MAX_DENOMS_PER_NOTE} selected)
+                </p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    {MINT_DENOMINATIONS.map(({ msats, label }) => {
+                        const selected = noteMsats.includes(msats)
+                        const disabled = !selected && noteMsats.length >= MAX_DENOMS_PER_NOTE
+                        return (
+                            <button
+                                key={msats}
+                                disabled={disabled}
+                                onClick={() => toggleDenom(msats)}
+                                className={`
+                                    py-3 rounded-lg border-2 text-sm font-medium
+                                    transition-all duration-150 select-none
+                                    ${selected
+                                        ? 'bg-blue-500 border-blue-500 text-white'
+                                        : disabled
+                                            ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                                            : 'border-blue-400 text-[#4B5971] hover:scale-105 cursor-pointer'
+                                    }
+                                `}
+                            >
+                                {label}
+                            </button>
+                        )
+                    })}
                 </div>
             </section>
 
-            <h4 className="text-center text-sm text-muted-foreground">OR</h4>
-
-            <div className='flex justify-center items-center m-4'>
-                <Field className='max-w-sm'>
-                    <FieldLabel>Custom denominations (in sats). eg: 1008, 5000, 10000</FieldLabel>
-                    <Input type="text" onChange={(e) => setSelectedDenomination(formatStringtoArray(e.target.value))} placeholder="Enter custom denomination in sats" />
-                </Field>
-            </div>
-
-            {selectedDenominations.length !== 0 && (<section className='mt-8'>
-                <h2 className='text-[#4B5971] text-center text-2xl'>Total Amount: <b className='text-blue-400'>{totalAmount} sats</b></h2>
-                <p className='text-[#4B5563] text-center'>{totalExpression}</p>
-            </section>)}
-
-            <section className="flex gap-4 flex-row justify-center m-2 mt-4 overflow-x-auto">
-                {selectedDenominations.map((item) => (
-                    <Card
-                        key={item.denomination}
-                        className="w-52 p-3 flex flex-col items-center gap-4 shadow-md"
-                    >
-                        <div className="p-3 bg-white rounded-md border">
-                            <QRCode
-                                value={String(item.denomination)}
-                                size={110}
-                                bgColor="white"
-                                fgColor="black"
-                            />
+            {noteMsats.length > 0 && (
+                <section className="max-w-xl mx-auto mt-5 px-4">
+                    <div className="rounded-xl border bg-blue-50 dark:bg-blue-950 p-4 space-y-2">
+                        <p className="text-sm font-semibold text-[#4B5971]">One paper note contains:</p>
+                        <div className="flex flex-wrap gap-2">
+                            {noteMsats.map((msats, i) => (
+                                <span
+                                    key={`${msats}-${i}`}
+                                    className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 text-xs font-medium"
+                                >
+                                    {formatMsats(msats)}
+                                </span>
+                            ))}
                         </div>
-                        <CardHeader className="w-full p-0">
-                            <Field className="flex flex-col gap-2 w-full">
-                                <FieldLabel className="text-center">
-                                    <b>{formatSats(item.denomination)} sats:</b> No. of Notes
-                                </FieldLabel>
+                        <p className="text-sm text-[#4B5971]">
+                            Note value: <b className="text-blue-600">{formatMsats(noteTotalMsats)}</b>
+                        </p>
+                    </div>
+                </section>
+            )}
 
-                                <Input
-                                    type="number"
-                                    min={1}
-                                    value={item.quantity}
-                                    onChange={(e) =>
-                                        updateQuantity(
-                                            item.denomination,
-                                            Number(e.target.value)
-                                        )
-                                    }
-                                />
-                            </Field>
-                        </CardHeader>
-                    </Card>
-                ))}
+            <section className="max-w-xl mx-auto mt-4 px-4">
+                <Field className="max-w-xs mx-auto">
+                    <FieldLabel>Number of paper notes to print</FieldLabel>
+                    <Input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={noteCount}
+                        onChange={e => setNoteCount(Math.max(1, Math.min(20, Number(e.target.value))))}
+                    />
+                </Field>
             </section>
 
+            {noteMsats.length > 0 && (
+                <section className="mt-5 text-center px-4 pb-2">
+                    <p className="text-[#4B5971] text-lg">
+                        Total to fund:{' '}
+                        <b className="text-blue-500">{totalSats.toFixed(3)} sats</b>
+                        <span className="text-sm text-muted-foreground ml-2">(~ ${usdAmount})</span>
+                    </p>
+                </section>
+            )}
+
             <DrawerFooter>
-                <Button type="button" onClick={updateSessionWithNotes} className='bg-[#319BD9] hover:bg-[#0e90dc] font-semibold'>Next <i className="fa-solid fa-arrow-right"></i></Button>
-                <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>Back</Button>
+                <Button
+                    type="button"
+                    onClick={saveAndProceed}
+                    disabled={noteMsats.length === 0}
+                    className='bg-[#319BD9] hover:bg-[#0e90dc] font-semibold'
+                >
+                    Next <i className="fa-solid fa-arrow-right ml-1"></i>
+                </Button>
+                <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>
+                    Back
+                </Button>
             </DrawerFooter>
         </>
     )

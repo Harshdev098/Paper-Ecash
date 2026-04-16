@@ -63,11 +63,6 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
                             alt={choosenDesign?.DesignName}
                             className="w-full object-contain"
                         />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <button className="bg-transparent text-white text-base font-semibold px-6 py-3 border-2 border-white rounded-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                                Preview
-                            </button>
-                        </div>
                     </div>
 
                     <div className="p-6 space-y-4 !pt-0">

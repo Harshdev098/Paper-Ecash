@@ -61,8 +61,3 @@ export interface NavItem {
     href: string;
     active: boolean;
 }
-
-export type DenominationPerNote={
-    denomination:number,
-    quantity:number
-}

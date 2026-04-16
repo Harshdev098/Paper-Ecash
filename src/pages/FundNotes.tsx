@@ -3,7 +3,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/redux/store"
 import { useEffect, useMemo, useRef, useState } from "react"
-import type { DenominationPerNote } from "@/types/fedimint.type"
 import { getNotesData } from "@/utils/db"
 import QRCode from "react-qr-code"
 import { convertFromSat, createInvoice, searchInvoiceForOperation } from "@/services/Federation"
@@ -19,54 +18,48 @@ import { isAlreadyProcessing, startPaymentSession, type InvoiceStatus } from "@/
 export default function FundNotes() {
     const { sessionId, walletId, operationId: reduxOperationId, paymentStatus, currentStep } = useSelector((state: RootState) => state.SessionSlice)
     const { loader, loaderMessage } = useSelector((state: RootState) => state.LoaderSlice)
-    const [selectedDenominations, setSelectedDenomination] = useState<DenominationPerNote[]>([])
-    const [createdInvoice, setCreatedInvoice] = useState<string | null>(null)
     const { walletStatus } = useSelector((state: RootState) => state.WalletSlice)
-    const [usdAmount, setUSDAmount] = useState<number>(0)
     const { wallet } = useFedimint()
     const dispatch = useDispatch<AppDispatch>()
     const isRunningRef = useRef(false)
+    const [noteMsats, setNoteMsats] = useState<number[]>([])
+    const [noteCount, setNoteCount] = useState(1)
+    const [createdInvoice, setCreatedInvoice] = useState<string | null>(null)
+    const [usdAmount, setUsdAmount] = useState(0)
     const [invoiceStatus, setInvoiceStatus] = useState<InvoiceStatus | null>(null)
+    const noteTotalMsats = useMemo(() => noteMsats.reduce((s, m) => s + m, 0), [noteMsats])
+    const invoiceMsats = useMemo(() => noteTotalMsats * noteCount, [noteTotalMsats, noteCount])
+    const totalSats = useMemo(() => invoiceMsats / 1000, [invoiceMsats])
 
     useEffect(() => {
         if (!sessionId) return
-        const loadDenomination = async () => {
+        const load = async () => {
             try {
-                dispatch(setLoader({ loader: true, loaderMessage: "Loading Selected Denomination" }))
-                const notesData = await getNotesData(sessionId)
-                setSelectedDenomination(notesData.notes)
+                dispatch(setLoader({ loader: true, loaderMessage: "Loading denomination" }))
+                const saved = await getNotesData(sessionId)
+                if (saved) {
+                    setNoteMsats(saved.noteMsats ?? [])
+                    setNoteCount(saved.noteCount ?? 1)
+                }
             } catch (err) {
-                console.log(err)
+                console.log("[FundNotes] load error:", err)
             } finally {
                 dispatch(setLoader({ loader: false, loaderMessage: null }))
             }
         }
-        loadDenomination()
+        load()
     }, [sessionId])
 
-    const totalAmount = useMemo(() => {
-        const total = selectedDenominations.reduce(
-            (sum, item) => sum + item.denomination * item.quantity,
-            0
-        )
-        return Number(total.toFixed(2))
-    }, [selectedDenominations])
-
     useEffect(() => {
-        const getUSDAmount = async () => {
-            try {
-                const usdValue = await convertFromSat(totalAmount)
-                setUSDAmount(usdValue)
-            } catch (err) {
-                console.log("error converting sats to usd", err)
-            }
-        }
-        getUSDAmount()
-    }, [totalAmount])
+        if (totalSats === 0) return
+        convertFromSat(totalSats)
+            .then(setUsdAmount)
+            .catch(err => console.log("[FundNotes] USD conversion error:", err))
+    }, [totalSats])
 
     useEffect(() => {
         if (walletStatus !== 'opened') return
-        if (!wallet || !walletId || !sessionId || totalAmount === 0) return
+        if (!wallet || !walletId || !sessionId || invoiceMsats === 0) return
         if (paymentStatus === 'paid') return
         if (isRunningRef.current) return
 
@@ -80,53 +73,45 @@ export default function FundNotes() {
                     ? await searchInvoiceForOperation(wallet, reduxOperationId)
                     : null
 
-                console.log("existing tx info:", existingTx)
+                console.log("[FundNotes] existing tx:", existingTx)
 
                 const canReuse =
                     existingTx &&
                     !existingTx.expired &&
-                    existingTx.amount === totalAmount
+                    Math.abs(existingTx.amount - invoiceMsats) < 10
 
                 if (canReuse && reduxOperationId) {
-                    console.log("reusing existing invoice for op:", reduxOperationId)
+                    console.log("[FundNotes] reusing invoice for op:", reduxOperationId)
                     setCreatedInvoice(existingTx!.invoice)
                     setInvoiceStatus('waiting')
-
                     if (!isAlreadyProcessing(reduxOperationId)) {
                         startPaymentSession(
-                            wallet,
-                            reduxOperationId,
+                            wallet, reduxOperationId,
                             () => dispatch(updateSessionThunk({ operationId: reduxOperationId, paymentStatus: 'paid' })),
                             (status) => {
                                 setInvoiceStatus(status)
-                                if (status === 'canceled') {
-                                    isRunningRef.current = false
-                                }
+                                if (status === 'canceled') isRunningRef.current = false
                             }
                         )
-                    } else {
-                        console.log("listener already active — skipping")
                     }
                     return
                 }
+
                 if (existingTx?.expired) {
-                    console.log("invoice expired — creating new")
+                    console.log("[FundNotes] invoice expired — creating new")
                     setInvoiceStatus('canceled')
                 }
 
-                console.log("creating new invoice for", totalAmount, "sats")
-                const result = await createInvoice(wallet, Math.round(totalAmount * 1000))
+                console.log("[FundNotes] creating invoice for", invoiceMsats, "msats")
+                const result = await createInvoice(wallet, invoiceMsats)
                 const currentOpId = result.operation_id
 
                 startPaymentSession(
-                    wallet,
-                    currentOpId,
+                    wallet, currentOpId,
                     () => dispatch(updateSessionThunk({ operationId: currentOpId, paymentStatus: 'paid' })),
                     (status) => {
                         setInvoiceStatus(status)
-                        if (status === 'canceled') {
-                            isRunningRef.current = false
-                        }
+                        if (status === 'canceled') isRunningRef.current = false
                     }
                 )
 
@@ -135,7 +120,7 @@ export default function FundNotes() {
                 setInvoiceStatus('waiting')
 
             } catch (err) {
-                console.error("invoice error:", err)
+                console.error("[FundNotes] invoice error:", err)
                 isRunningRef.current = false
             } finally {
                 dispatch(setLoader({ loader: false, loaderMessage: null }))
@@ -143,21 +128,20 @@ export default function FundNotes() {
         }
 
         handleInvoice()
-
-    }, [walletStatus, walletId, totalAmount, reduxOperationId])
+    }, [walletStatus, walletId, invoiceMsats, reduxOperationId])
 
     const getPaymentStatus = async () => {
         if (!wallet || !reduxOperationId) return
         try {
-            dispatch(setLoader({ loader: true, loaderMessage: "Getting Payment status" }))
+            dispatch(setLoader({ loader: true, loaderMessage: "Checking payment status" }))
             const balance = await wallet.balance.getBalance()
-            if (balance >= totalAmount * 1000) {
+            if (balance >= invoiceMsats) {
                 dispatch(updateSessionThunk({ operationId: reduxOperationId, paymentStatus: 'paid' }))
             } else {
-                alert(`Payment pending — balance is ${balance / 1000} sats, need ${totalAmount} sats`)
+                alert(`Payment pending — balance ${balance / 1000} sats, need ${totalSats} sats`)
             }
         } catch (err) {
-            console.log("error checking payment status", err)
+            console.log("[FundNotes] check error:", err)
         } finally {
             dispatch(setLoader({ loader: false, loaderMessage: null }))
         }
@@ -185,7 +169,7 @@ export default function FundNotes() {
                 <div className="text-center m-6">
                     <h3 className="text-xl font-semibold text-[#4B5971]">
                         Total Fundable Amount:{" "}
-                        <b className="text-[#1C6FA7]">{totalAmount} sats</b>
+                        <b className="text-[#1C6FA7]">{totalSats.toFixed(3)} sats</b>
                     </h3>
                     <p className="text-sm text-[#4B5563]">~ ${usdAmount}</p>
                 </div>

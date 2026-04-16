@@ -88,14 +88,17 @@ export const searchInvoiceForOperation = async (wallet: Wallet, operationId: str
     return null;
 }
 
-export const getEcashToken = async (wallet: Wallet, amount: number): Promise<string> => {
+export const getEcashToken = async (wallet: Wallet, amountMsats: number) => {
     try {
-        console.log(`[Federation] spending ${amount} sats (${amount * 1000} msats)`)
-        const notes = await wallet.mint.spendNotes(amount * 1000, Number.MAX_SAFE_INTEGER)
+        console.log(`spending ${amountMsats} msats`)
+        const notes = await wallet.mint.spendNotes(amountMsats, Number.MAX_SAFE_INTEGER)
         const token = notes.notes
-        return token
+        const operationId=notes.operation_id
+        const byteLen = new TextEncoder().encode(token).byteLength
+        console.log(`token: ${token.length} chars, ${byteLen} bytes`)
+        return {token,operationId}
     } catch (err) {
-        console.error(`getEcashToken error for ${amount} sats:`, err)
+        console.error(`getEcashToken error:`, err)
         throw err
     }
 }

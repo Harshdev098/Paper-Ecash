@@ -26,10 +26,6 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
             console.log("[FedimintManager] known wallet clients:", walletList)
             console.log("[FedimintManager] initializing wallet for id:", id)
 
-            // Try getWallet first (returns already-open instance),
-            // fall back to openWallet (opens persisted wallet from storage).
-            // Do NOT set wallet to undefined before this — if we're reusing
-            // the same wallet ID as a prior session, we want a clean handoff.
             let walletData = await getWallet(id)
             if (!walletData) {
                 console.log("[FedimintManager] wallet not open, calling openWallet")
