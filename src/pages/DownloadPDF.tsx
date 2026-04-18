@@ -3,7 +3,6 @@ import { DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/co
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEffect, useRef, useState } from "react";
-import { FastAverageColor } from "fast-average-color";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { extractDesign } from "@/services/SessionControl";
@@ -15,11 +14,11 @@ import { useFedimint } from "@/context/FedimintManager";
 import { convertFromSat } from "@/services/Federation";
 import PreviewDesign from "@/components/PreviewDesign";
 import ReclaimNotes from "@/components/ReclaimNotes";
+import { setErrorWithTimeout } from "@/redux/slices/Alert";
 
 
 export default function DownloadPDF() {
     const dispatch = useDispatch<AppDispatch>()
-    const [bgColor, setBgColor] = useState("#eff6ff");
     const { designId, sessionId } = useSelector((state: RootState) => state.SessionSlice)
     const design = designId ? extractDesign(designId) : null;
     const [dpi, setDpi] = useState<"300" | "72" | "150">("300");
@@ -41,12 +40,15 @@ export default function DownloadPDF() {
             try {
                 dispatch(setLoader({ loader: true, loaderMessage: "Loading denomination" }))
                 const saved = await getNotesData(sessionId)
-                console.log("the saved notes data are",saved)
+                console.log("the saved notes data are", saved)
                 if (saved) {
                     setNoteMsats(saved.noteMsats ?? [])
                     setNoteCount(saved.noteCount ?? 1)
                 }
-            } catch (err) { console.log(err) }
+            } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                dispatch(setErrorWithTimeout({ type: "Notes Loader Error", message }))
+            }
             finally { dispatch(setLoader({ loader: false, loaderMessage: null })) }
         }
         load()
@@ -56,11 +58,9 @@ export default function DownloadPDF() {
         const img = imgRef.current;
         if (!img) return;
         dispatch(setLoader({ loader: true, loaderMessage: "Previewing the Notes" }))
-        const fac = new FastAverageColor();
 
         const handleLoad = async () => {
             try {
-                const color = await fac.getColorAsync(img);
                 const colors = getSmartColors(img);
 
                 if (colors) {
@@ -69,11 +69,8 @@ export default function DownloadPDF() {
                         fg: colors.dark,
                     });
                 }
-                setBgColor(color.hex);
             } catch (err) {
                 console.error(err);
-            } finally {
-                fac.destroy();
             }
         };
 
@@ -86,7 +83,6 @@ export default function DownloadPDF() {
 
         return () => {
             img.removeEventListener('load', handleLoad);
-            fac.destroy();
         };
     }, [design?.path]);
 
@@ -106,12 +102,14 @@ export default function DownloadPDF() {
         try {
             if (!wallet) throw new Error("Wallet not found")
             if (!design) throw new Error("design not found")
-            if(!sessionId) throw new Error("session not found")
+            if (!sessionId) throw new Error("session not found")
             if (noteMsats.length === 0) throw new Error("Note composition not found")
             dispatch(setLoader({ loader: true, loaderMessage: "Creating and downloading the PDF" }))
             await generateNotesPDF(design, sessionId, noteMsats, noteCount, dpi, printSize, qrColors.fg, qrColors.bg, wallet)
         } catch (err) {
             console.log("error downloading pdf", err)
+            const message = err instanceof Error ? err.message : String(err);
+            dispatch(setErrorWithTimeout({ type: "Notes Downloading Error", message }))
         } finally {
             dispatch(setLoader({ loader: false, loaderMessage: null }))
         }
@@ -121,16 +119,7 @@ export default function DownloadPDF() {
         <>
             {loader && <Loader message={loaderMessage} />}
             <section className="flex flex-col md:flex-row flex-wrap">
-                <div
-                    className="md:w-1/2 w-full mt-4 flex items-end justify-center transition-colors duration-500 relative"
-                    style={{
-                        background: `linear-gradient(to bottom, white, ${bgColor})`
-                    }}
-                >
-                    <div className="w-full flex justify-center items-center pb-8 px-4">
-                        <PreviewDesign design={design} totalSats={totalSats} />
-                    </div>
-                </div>
+                <PreviewDesign design={design} totalSats={totalSats} />
 
                 <div className="md:w-1/2 w-full flex flex-col justify-between p-6">
                     <DrawerHeader>
@@ -210,14 +199,14 @@ export default function DownloadPDF() {
                         <Button
                             type="button"
                             className=" bg-white border border-[#319BD9] hover:bg-white text-[#319BD9] text-base font-semibold"
-                            onClick={() => setReclaimWindow(true)}
+                            onClick={() => setReclaimWindow(!reclaimWindow)}
                         >
                             <i className="fa-solid fa-rotate-left"></i> Reclaim Notes
                         </Button>
                     </DrawerFooter>
                 </div>
             </section>
-            {reclaimWindow && <ReclaimNotes wallet={wallet} noteTotalMsats={noteTotalMsats/1000} sessionId={sessionId ?? ''} />}
+            {reclaimWindow && <ReclaimNotes wallet={wallet} noteTotalMsats={noteTotalMsats / 1000} sessionId={sessionId ?? ''} />}
         </>
     );
 }

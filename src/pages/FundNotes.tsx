@@ -14,6 +14,7 @@ import { BackToStep } from "@/services/SessionControl"
 import { setLoader } from "@/redux/slices/LoaderSlice"
 import Loader from "@/components/Loader"
 import { isAlreadyProcessing, startPaymentSession, type InvoiceStatus } from "@/services/PaymentManager"
+import { setErrorWithTimeout } from "@/redux/slices/Alert"
 
 export default function FundNotes() {
     const { sessionId, walletId, operationId: reduxOperationId, paymentStatus, currentStep } = useSelector((state: RootState) => state.SessionSlice)
@@ -42,7 +43,8 @@ export default function FundNotes() {
                     setNoteCount(saved.noteCount ?? 1)
                 }
             } catch (err) {
-                console.log("[FundNotes] load error:", err)
+                const message = err instanceof Error ? err.message : String(err);
+                dispatch(setErrorWithTimeout({ type: "Notes Loader Error", message }))
             } finally {
                 dispatch(setLoader({ loader: false, loaderMessage: null }))
             }
@@ -78,7 +80,7 @@ export default function FundNotes() {
                 const canReuse =
                     existingTx &&
                     !existingTx.expired &&
-                    Math.abs(existingTx.amount - invoiceMsats) < 10
+                    existingTx.amount === totalSats
 
                 if (canReuse && reduxOperationId) {
                     console.log("[FundNotes] reusing invoice for op:", reduxOperationId)
@@ -90,16 +92,14 @@ export default function FundNotes() {
                             () => dispatch(updateSessionThunk({ operationId: reduxOperationId, paymentStatus: 'paid' })),
                             (status) => {
                                 setInvoiceStatus(status)
-                                if (status === 'canceled') isRunningRef.current = false
+                                if (status === 'canceled') {
+                                    isRunningRef.current = false
+                                    dispatch(setErrorWithTimeout({ type: "Invoice Cancelled", message: '' }))
+                                }
                             }
                         )
                     }
                     return
-                }
-
-                if (existingTx?.expired) {
-                    console.log("[FundNotes] invoice expired — creating new")
-                    setInvoiceStatus('canceled')
                 }
 
                 console.log("[FundNotes] creating invoice for", invoiceMsats, "msats")
@@ -111,16 +111,20 @@ export default function FundNotes() {
                     () => dispatch(updateSessionThunk({ operationId: currentOpId, paymentStatus: 'paid' })),
                     (status) => {
                         setInvoiceStatus(status)
-                        if (status === 'canceled') isRunningRef.current = false
+                        if (status === 'canceled') {
+                            isRunningRef.current = false
+                            dispatch(setErrorWithTimeout({ type: "Invoice Cancelled", message: '' }))
+                        }
                     }
                 )
 
                 dispatch(updateSessionThunk({ operationId: currentOpId, upgradeStep: false }))
                 setCreatedInvoice(result.invoice)
                 setInvoiceStatus('waiting')
-
             } catch (err) {
                 console.error("[FundNotes] invoice error:", err)
+                const message = err instanceof Error ? err.message : String(err);
+                dispatch(setErrorWithTimeout({ type: "Invoice Error", message }))
                 isRunningRef.current = false
             } finally {
                 dispatch(setLoader({ loader: false, loaderMessage: null }))

@@ -6,47 +6,62 @@ const SATS_PER_BTC = 100_000_000;
 
 
 export const fetchFederationWithSessionId = async (sessionId: string) => {
-    const federationId = await getSessionBySessionId(sessionId)
-    const federationData = await fetchFormatedFederation(federationId?.federationId ?? undefined)
+    try {
+        const federationId = await getSessionBySessionId(sessionId)
+        const federationData = await fetchFormatedFederation(federationId?.federationId ?? undefined)
 
-    return federationData;
+        return federationData;
+    } catch (err) {
+        if (err instanceof Error) {
+            throw new Error(`${err}`)
+        } else {
+            throw new Error(`${err}`)
+        }
+    }
 }
 
 export const fetchFormatedFederation = async (
     federationId?: string
 ): Promise<FormatedFederationData[]> => {
+    try {
+        let federations;
 
-    let federations;
+        if (federationId) {
+            const federation = await api.getFederation(federationId);
+            federations = [federation];
+        } else {
+            federations = await api.getFederations();
+        }
 
-    if (federationId) {
-        const federation = await api.getFederation(federationId);
-        federations = [federation];
-    } else {
-        federations = await api.getFederations();
-    }
+        const formattedFederations: FormatedFederationData[] = [];
 
-    const formattedFederations: FormatedFederationData[] = [];
+        for (const fed of federations) {
+            const config = await api.getFederationConfig(fed.id);
 
-    for (const fed of federations) {
-        const config = await api.getFederationConfig(fed.id);
+            const apiEndpoints = (config?.global as any)?.api_endpoints ?? {};
+            const members = Object.keys(apiEndpoints).length;
 
-        const apiEndpoints = (config?.global as any)?.api_endpoints ?? {};
-        const members = Object.keys(apiEndpoints).length;
+            if (fed.health === 'online' || fed.health === 'degraded') {
+                formattedFederations.push({
+                    ...fed,
+                    members
+                });
+            }
+        }
 
-        if (fed.health === 'online' || fed.health === 'degraded') {
-            formattedFederations.push({
-                ...fed,
-                members
-            });
+        return formattedFederations.sort((a, b) => {
+            const avgA = a.nostr_votes?.avg ?? 0;
+            const avgB = b.nostr_votes?.avg ?? 0;
+
+            return avgB - avgA;
+        });
+    } catch (err) {
+        if (err instanceof Error) {
+            throw new Error(`Fedimint Observer Error: ${err.message}`);
+        } else {
+            throw new Error(`Fedimint Observer Error: ${String(err)}`);
         }
     }
-
-    return formattedFederations.sort((a, b) => {
-        const avgA = a.nostr_votes?.avg ?? 0;
-        const avgB = b.nostr_votes?.avg ?? 0;
-
-        return avgB - avgA;
-    });
 };
 
 export const createInvoice = async (wallet: Wallet, amountMsats: number): Promise<CreateBolt11Response> => {
@@ -56,7 +71,11 @@ export const createInvoice = async (wallet: Wallet, amountMsats: number): Promis
         const invoiceResult = await wallet.lightning.createInvoice(amountMsats, `PaperEcash Notes Funding ${nonce}`, 5 * 60)
         return invoiceResult;
     } catch (err) {
-        throw err
+        if (err instanceof Error) {
+            throw new Error(`Federation error occurred: ${err.message}`);
+        } else {
+            throw new Error(`Federation error occurred: ${String(err)}`);
+        }
     }
 }
 
@@ -82,10 +101,14 @@ export const searchInvoiceForOperation = async (wallet: Wallet, operationId: str
         if (found === false) {
             return null;
         }
+        return null;
     } catch (err) {
-        console.log("an error occured ", err)
+        if (err instanceof Error) {
+            throw new Error(`Federation error occurred: ${err.message}`);
+        } else {
+            throw new Error(`Federation error occurred: ${String(err)}`);
+        }
     }
-    return null;
 }
 
 export const getEcashToken = async (wallet: Wallet, amountMsats: number) => {
@@ -93,13 +116,16 @@ export const getEcashToken = async (wallet: Wallet, amountMsats: number) => {
         console.log(`spending ${amountMsats} msats`)
         const notes = await wallet.mint.spendNotes(amountMsats, Number.MAX_SAFE_INTEGER)
         const token = notes.notes
-        const operationId=notes.operation_id
+        const operationId = notes.operation_id
         const byteLen = new TextEncoder().encode(token).byteLength
         console.log(`token: ${token.length} chars, ${byteLen} bytes`)
-        return {token,operationId}
+        return { token, operationId }
     } catch (err) {
-        console.error(`getEcashToken error:`, err)
-        throw err
+        if (err instanceof Error) {
+            throw new Error(`Federation error occurred: ${err.message}`);
+        } else {
+            throw new Error(`Federation error occurred: ${String(err)}`);
+        }
     }
 }
 
@@ -117,12 +143,15 @@ const fetchExchangeRates = async () => {
         };
     } catch (err) {
         console.log('an error occured while fetching exchange rates', err);
+        const fallback = localStorage.getItem('usdRate');
+        return { usd: Number(fallback) };
     }
 };
 
 export const convertFromSat = async (sats: number): Promise<number> => {
     const btcValue = sats / SATS_PER_BTC;
     const rates = await fetchExchangeRates();
+    console.log("the rates are ",rates)
 
     return Number((btcValue * (rates?.usd || localStorage.getItem('usdRate'))).toFixed(4));
 };

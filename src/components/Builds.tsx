@@ -8,16 +8,25 @@ import { Badge } from './ui/badge'
 import { labelConfig } from '@/utils/label'
 import { getAssetUrl } from '@/utils/url'
 import { useSearchParams } from 'react-router-dom'
+import { setErrorWithTimeout } from '@/redux/slices/Alert'
+import { useDispatch } from 'react-redux'
+import type { AppDispatch } from '@/redux/store'
 
 
 export default function Builds() {
     const [builds, setBuilds] = useState<DraftDesign[] | null>(null)
     const [searchParams, setSearchParams] = useSearchParams()
+    const dispatch=useDispatch<AppDispatch>()
 
     useMemo(async () => {
-        const draftSessions = await filterBuildSession()
-        const designList = extractDesingListFromSession(draftSessions)
-        setBuilds(designList)
+        try {
+            const draftSessions = await filterBuildSession()
+            const designList = extractDesingListFromSession(draftSessions)
+            setBuilds(designList)
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            dispatch(setErrorWithTimeout({ type: "Sesssion Init Error", message }))
+        }
     }, [])
 
     return (

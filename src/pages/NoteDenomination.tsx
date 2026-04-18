@@ -12,28 +12,29 @@ import { setLoader } from '@/redux/slices/LoaderSlice'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { convertFromSat } from '@/services/Federation'
+import { setErrorWithTimeout } from '@/redux/slices/Alert'
 
 const MINT_DENOMINATIONS = [
-    { msats: 1024,       label: '1.02 sat' },
-    { msats: 2048,       label: '2.05 sat' },
-    { msats: 4096,       label: '4.10 sat' },
-    { msats: 8192,       label: '8.19 sat' },
-    { msats: 16384,      label: '16.4 sat' },
-    { msats: 32768,      label: '32.8 sat' },
-    { msats: 65536,      label: '65.5 sat' },
-    { msats: 131072,     label: '131 sat' },
-    { msats: 262144,     label: '262 sat' },
-    { msats: 524288,     label: '524 sat' },
-    { msats: 1048576,    label: '1.05 ksat' },
-    { msats: 2097152,    label: '2.10 ksat' },
-    { msats: 4194304,    label: '4.19 ksat' },
-    { msats: 8388608,    label: '8.39 ksat' },
-    { msats: 16777216,   label: '16.8 ksat' },
-    { msats: 33554432,   label: '33.6 ksat' },
-    { msats: 67108864,   label: '67.1 ksat' },
-    { msats: 134217728,  label: '134 ksat' },
-    { msats: 268435456,  label: '268 ksat' },
-    { msats: 536870912,  label: '537 ksat' },
+    { msats: 1024, label: '1.02 sat' },
+    { msats: 2048, label: '2.05 sat' },
+    { msats: 4096, label: '4.10 sat' },
+    { msats: 8192, label: '8.19 sat' },
+    { msats: 16384, label: '16.4 sat' },
+    { msats: 32768, label: '32.8 sat' },
+    { msats: 65536, label: '65.5 sat' },
+    { msats: 131072, label: '131 sat' },
+    { msats: 262144, label: '262 sat' },
+    { msats: 524288, label: '524 sat' },
+    { msats: 1048576, label: '1.05 ksat' },
+    { msats: 2097152, label: '2.10 ksat' },
+    { msats: 4194304, label: '4.19 ksat' },
+    { msats: 8388608, label: '8.39 ksat' },
+    { msats: 16777216, label: '16.8 ksat' },
+    { msats: 33554432, label: '33.6 ksat' },
+    { msats: 67108864, label: '67.1 ksat' },
+    { msats: 134217728, label: '134 ksat' },
+    { msats: 268435456, label: '268 ksat' },
+    { msats: 536870912, label: '537 ksat' },
     { msats: 1073741824, label: '1.07 Msat' },
 ]
 
@@ -80,7 +81,7 @@ export default function NoteDenomination() {
         [noteMsats]
     )
 
-    // Total sats across all copies (for invoice)
+    // Total sats across all copies
     const totalSats = useMemo(
         () => (noteTotalMsats * noteCount) / 1000,
         [noteTotalMsats, noteCount]
@@ -119,7 +120,8 @@ export default function NoteDenomination() {
 
             dispatch(updateSessionThunk())
         } catch (err) {
-            console.log("[NoteDenomination] save error:", err)
+            const message = err instanceof Error ? err.message : String(err);
+            dispatch(setErrorWithTimeout({ type: "Notes Loader Error", message }))
         } finally {
             dispatch(setLoader({ loader: false, loaderMessage: null }))
         }

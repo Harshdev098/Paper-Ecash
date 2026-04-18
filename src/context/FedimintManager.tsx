@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { setWalletStatus } from "@/redux/slices/WalletSlice";
-import { getWallet, listClients, openWallet, setLogLevel, type Wallet } from "@fedimint/core-web";
+import { getWallet, openWallet, setLogLevel, listClients, type Wallet } from "@fedimint/core-web";
+import Loader from "@/components/Loader";
 
 interface FedimintManagerType {
     wallet: Wallet | undefined
@@ -16,31 +17,48 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
     const { walletStatus } = useSelector((state: RootState) => state.WalletSlice)
     const [wallet, setWallet] = useState<Wallet | undefined>(undefined)
     const { walletId } = useSelector((state: RootState) => state.SessionSlice)
+    const isInitializing = useRef(false)
+    const [walletLoading, setWalletLoading] = useState(false)
+    const [walletLoadingMessage, setWalletLoadingMessage] = useState<string | null>(null)
+
 
     const initializeFedimintInstance = async (id: string) => {
+        if (isInitializing.current) {
+            console.log("skipping duplicate initialization")
+            return
+        }
+
+        isInitializing.current = true
+
+        setWalletLoading(true)
+        setWalletLoadingMessage("Opening wallet...")
+
         try {
             dispatch(setWalletStatus('opening'))
             setLogLevel('debug')
 
             const walletList = listClients()
-            console.log("[FedimintManager] known wallet clients:", walletList)
-            console.log("[FedimintManager] initializing wallet for id:", id)
+            console.log("known wallet clients:", walletList)
+            console.log("initializing wallet for id:", id)
 
             let walletData = await getWallet(id)
             if (!walletData) {
-                console.log("[FedimintManager] wallet not open, calling openWallet")
                 walletData = await openWallet(id)
             }
 
             if (!walletData) throw new Error(`Could not open wallet ${id}`)
 
-            console.log("[FedimintManager] wallet ready:", walletData.id)
+            console.log("wallet ready:", walletData.id)
             setWallet(walletData)
             dispatch(setWalletStatus('opened'))
         } catch (err) {
-            console.error("[FedimintManager] error initializing wallet:", err)
+            console.error("error initializing wallet:", err)
             setWallet(undefined)
             dispatch(setWalletStatus('closed'))
+        } finally {
+            setWalletLoading(false)
+            setWalletLoadingMessage(null)
+            isInitializing.current = false
         }
     }
 
@@ -54,7 +72,7 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
 
     useEffect(() => {
         if (!walletId) return
-        console.log("[FedimintManager] walletId changed, reinitializing:", walletId)
+        console.log("walletId changed, reinitializing:", walletId)
         initializeFedimintInstance(walletId)
     }, [walletId])
 
@@ -66,6 +84,7 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
 
     return (
         <FedimintManagerContext.Provider value={{ wallet, clearInstance }}>
+            {walletLoading && <Loader message={walletLoadingMessage} />}
             {children}
         </FedimintManagerContext.Provider>
     )

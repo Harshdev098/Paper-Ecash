@@ -11,22 +11,28 @@ import { useDispatch } from 'react-redux'
 import type { AppDispatch } from '@/redux/store'
 import { loadSessionThunk } from '@/redux/slices/SessionSlice'
 import { getAssetUrl } from '@/utils/url'
+import { setErrorWithTimeout } from '@/redux/slices/Alert'
 
 
 export default function Draft() {
     const [draftDesigns, setDraftDesigns] = useState<DraftDesign[] | null>(null)
     const [searchParams, setSearchParams] = useSearchParams()
-    const dispatch=useDispatch<AppDispatch>()
+    const dispatch = useDispatch<AppDispatch>()
 
     useMemo(async () => {
-        const draftSessions = await filterDraftSessions()
-        const designList = extractDesingListFromSession(draftSessions)
-        setDraftDesigns(designList)
+        try {
+            const draftSessions = await filterDraftSessions()
+            const designList = extractDesingListFromSession(draftSessions)
+            setDraftDesigns(designList)
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            dispatch(setErrorWithTimeout({ type: "Sesssion Init Error", message }))
+        }
     }, [])
 
-    const continueSession=(sessionId:string)=>{
+    const continueSession = (sessionId: string) => {
         console.log("continuing the session")
-        searchParams.set('id',sessionId)
+        searchParams.set('id', sessionId)
         setSearchParams(searchParams)
         dispatch(loadSessionThunk(sessionId))
     }

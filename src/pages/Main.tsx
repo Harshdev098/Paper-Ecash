@@ -13,17 +13,20 @@ import { labelConfig } from '@/utils/label'
 import type { Label } from '@/types/init.type'
 import designs from '../../public/designs/json/designs'
 import { useSearchParams } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
-import type { AppDispatch } from '@/redux/store'
+import { useDispatch, useSelector } from 'react-redux'
+import type { AppDispatch, RootState } from '@/redux/store'
 import { loadSessionThunk } from '@/redux/slices/SessionSlice'
 import SessionCard from '@/components/SessionCard'
 import { getSessionBySessionId } from '@/utils/db'
+import { setErrorWithTimeout } from '@/redux/slices/Alert'
+import Alert from "@/components/Alert"
 
 
 export default function Main() {
     const dispatch = useDispatch<AppDispatch>()
     const [tabs, setTabs] = useState<'explore' | 'draft' | 'build'>('explore')
     const [labelFilter, setLabelFilter] = useState<Label | null>(null)
+    const { error, result } = useSelector((state: RootState) => state.AlertSlice)
     const [searchParams, setSearchParams] = useSearchParams()
     const filteredDesigns = labelFilter
         ? designs.designs.filter(design =>
@@ -35,21 +38,27 @@ export default function Main() {
 
     useEffect(() => {
         const initSession = async () => {
-            if (!sessionId) return;
-            const sessionExist = await getSessionBySessionId(sessionId)
-            if (!sessionExist) {
-                searchParams.delete("id")
-                setSearchParams(searchParams)
-                return;
-            }
+            try {
+                if (!sessionId) return;
+                const sessionExist = await getSessionBySessionId(sessionId)
+                if (!sessionExist) {
+                    searchParams.delete("id")
+                    setSearchParams(searchParams)
+                    return;
+                }
 
-            dispatch(loadSessionThunk(sessionId))
+                dispatch(loadSessionThunk(sessionId))
+            } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                dispatch(setErrorWithTimeout({ type: "Sesssion Init Error", message }))
+            }
         }
         initSession()
     }, [sessionId])
 
     return (
         <>
+            <Alert Error={error} Result={result} />
             <section className='min-h-screen flex flex-col pb-20 md:pb-0'>
                 <MainNav />
 

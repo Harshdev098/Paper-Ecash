@@ -10,11 +10,12 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '@/redux/store'
 import { setWalletStatus } from '@/redux/slices/WalletSlice'
 import { updateSessionThunk } from '@/redux/slices/SessionSlice'
-import { generateMnemonic, getMnemonic, joinFederation, listClients, getWallet } from '@fedimint/core-web'
+import { generateMnemonic, getMnemonic, joinFederation, listClients, getWallet, parseInviteCode } from '@fedimint/core-web'
 import { fetchFormatedFederation } from '@/services/Federation'
 import type { FormatedFederationData } from '@/types/fedimint.type'
 import { setLoader } from '@/redux/slices/LoaderSlice'
 import Loader from '@/components/Loader'
+import { setErrorWithTimeout } from '@/redux/slices/Alert'
 
 export default function FederationSelecter() {
     const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -35,7 +36,8 @@ export default function FederationSelecter() {
                 console.log("fetched federation data is", federationData)
                 setFederationList(federationData)
             } catch (err) {
-                console.log("an error occured", err)
+                const message = err instanceof Error ? err.message : String(err);
+                dispatch(setErrorWithTimeout({ type: "Fedimint Observer Error", message }))
             } finally {
                 dispatch(setLoader({ loader: false, loaderMessage: null }))
             }
@@ -43,105 +45,64 @@ export default function FederationSelecter() {
         fetchFederations()
     }, [])
 
-    // The core insight: the Fedimint SDK creates a NEW wallet slot every time
-    // joinFederation is called, even without a clientName. Two wallet slots
-    // sharing the same mnemonic on the same federation = key collision = canceled.
-    // Solution: before joining, check if we already have an open wallet for
-    // this federation and reuse it. Only call joinFederation if truly first time.
     const getOrJoinFederation = async (inviteCode: string): Promise<{
         walletId: string
         federationId: string
     }> => {
-        // Parse the target federation ID from the invite code first
-        // so we can compare against existing wallets
+        const parsed = await parseInviteCode(inviteCode)
+        const targetFederationId = parsed.federation_id
+        console.log("target federation:", targetFederationId)
+
+        // Checking if we already have a wallet on this federation
         const existingClientIds = listClients()
-        console.log("[FederationSelecter] existing wallet client IDs:", existingClientIds)
+        console.log("existing wallet client IDs:", existingClientIds)
 
-        // Check each existing wallet to see if it's already on this federation
-        for (const clientId of existingClientIds) {
-            try {
-                const existingWallet = await getWallet(clientId.id)
-                if (!existingWallet) continue
-
-                const existingFedId = await existingWallet.federation.getFederationId()
-                console.log(`[FederationSelecter] client ${clientId} is on federation ${existingFedId}`)
-
-                // We need the target federation ID — parse it from a temp join
-                // OR compare by joining and checking. But to avoid creating a
-                // new slot, we compare federation IDs after a dry parse.
-                // The simplest approach: join (which may create a new slot),
-                // then check if the new wallet's federation matches an existing one,
-                // and if so, discard the new slot and use the existing one.
-                // We'll do this check AFTER joining below.
-            } catch (err) {
-                console.log(`[FederationSelecter] could not open wallet ${clientId}:`, err)
+        for (const clientInfo of existingClientIds) {
+            if (clientInfo.federationId === targetFederationId) {
+                console.log(
+                    `reusing existing wallet ${clientInfo.id} for federation ${targetFederationId}`
+                )
+                getWallet(clientInfo.id)
+                return { walletId: clientInfo.id, federationId: targetFederationId }
             }
         }
 
-        // Join federation — this always creates a new wallet slot
+        // join the federation, if not exists
+        console.log("no existing wallet found, joining federation")
         const result = await joinFederation(inviteCode, false)
         if (!result) throw new Error("joinFederation returned null")
 
         const newWalletId = result.id
         const newFederationId = await result.federation.getFederationId()
-        console.log(`[FederationSelecter] joinFederation created wallet ${newWalletId} for federation ${newFederationId}`)
+        console.log(`joined federation, new wallet: ${newWalletId}`)
 
-        // Now check: does any PREVIOUS wallet slot use the same federation?
-        // If yes, the new slot is a duplicate — reuse the original one instead.
-        const priorClientIds = existingClientIds.filter(id => id.id !== newWalletId)
-
-        for (const clientId of priorClientIds) {
-            try {
-                const existingWallet = await getWallet(clientId.id)
-                if (!existingWallet) continue
-
-                const existingFedId = await existingWallet.federation.getFederationId()
-
-                if (existingFedId === newFederationId) {
-                    console.log(
-                        `[FederationSelecter] REUSING existing wallet ${clientId} for federation ${newFederationId}`,
-                        `(discarding duplicate new wallet ${newWalletId})`
-                    )
-                    // The new wallet slot was created but we must not use it —
-                    // it shares the mnemonic with clientId and will cause key collisions.
-                    // Return the original wallet's ID so all operations go through
-                    // the single canonical slot for this federation.
-                    return { walletId: clientId.id, federationId: newFederationId }
-                }
-            } catch (err) {
-                console.log(`[FederationSelecter] could not check wallet ${clientId}:`, err)
-            }
-        }
-
-        // No prior wallet for this federation — the new one is the canonical slot
-        console.log(`[FederationSelecter] using new wallet ${newWalletId} as canonical slot`)
         return { walletId: newWalletId, federationId: newFederationId }
     }
 
     const selectFederation = async () => {
         try {
             if (!inviteCode) throw Error("Please enter Invite Code or select a Federation")
-            console.log("[FederationSelecter] joining federation, sessionId:", sessionId)
+            console.log("joining federation, sessionId:", sessionId)
             setIsJoining(true)
             dispatch(setLoader({ loader: true, loaderMessage: "Joining the selected Federation" }))
 
-            // Ensure global mnemonic exists
             const mnemonics = await getMnemonic()
             if (!mnemonics?.length) {
                 await generateMnemonic()
-                console.log("[FederationSelecter] generated new global mnemonic")
+                console.log("generated new global mnemonic")
             } else {
-                console.log("[FederationSelecter] reusing existing global mnemonic")
+                console.log("reusing existing global mnemonic")
             }
 
             const { walletId, federationId } = await getOrJoinFederation(inviteCode)
 
-            console.log(`[FederationSelecter] resolved walletId: ${walletId}, federationId: ${federationId}`)
+            console.log(`resolved walletId: ${walletId}, federationId: ${federationId}`)
             dispatch(setWalletStatus('opened'))
             dispatch(updateSessionThunk({ federationId, walletId }))
 
         } catch (err) {
-            console.log("[FederationSelecter] error:", err)
+            const message = err instanceof Error ? err.message : String(err);
+            dispatch(setErrorWithTimeout({ type: "Federation Selection Error", message }))
         } finally {
             setIsJoining(false)
             dispatch(setLoader({ loader: false, loaderMessage: null }))

@@ -73,7 +73,6 @@ export function startPaymentSession(
                 session.claimed = true
                 session.streamEnded = true
                 onStateChange?.('claimed')
-                console.log(`${operationId} claimed — firing onClaimed`)
                 onClaimed()
                 clearSession(operationId)
                 return
@@ -82,7 +81,6 @@ export function startPaymentSession(
             if (typeof state === 'object' && state !== null) {
                 if ('waiting_for_payment' in state) {
                     onStateChange?.('waiting')
-                    console.log(`${operationId} waiting_for_payment — invoice live`)
                     return
                 }
 
