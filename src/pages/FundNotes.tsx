@@ -23,14 +23,53 @@ export default function FundNotes() {
     const { wallet } = useFedimint()
     const dispatch = useDispatch<AppDispatch>()
     const isRunningRef = useRef(false)
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
     const [noteMsats, setNoteMsats] = useState<number[]>([])
     const [noteCount, setNoteCount] = useState(1)
     const [createdInvoice, setCreatedInvoice] = useState<string | null>(null)
     const [usdAmount, setUsdAmount] = useState(0)
     const [invoiceStatus, setInvoiceStatus] = useState<InvoiceStatus | null>(null)
+    const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
     const noteTotalMsats = useMemo(() => noteMsats.reduce((s, m) => s + m, 0), [noteMsats])
     const invoiceMsats = useMemo(() => noteTotalMsats * noteCount, [noteTotalMsats, noteCount])
     const totalSats = useMemo(() => invoiceMsats / 1000, [invoiceMsats])
+
+    const formatCountdown = (secs: number): string => {
+        const m = Math.floor(secs / 60).toString().padStart(2, '0')
+        const s = (secs % 60).toString().padStart(2, '0')
+        return `${m}:${s}`
+    }
+
+    const startCountdown = (durationSecs: number) => {
+        if (timerRef.current) clearInterval(timerRef.current)
+        setSecondsLeft(durationSecs)
+
+        timerRef.current = setInterval(() => {
+            setSecondsLeft(prev => {
+                if (prev === null || prev <= 1) {
+                    clearInterval(timerRef.current!)
+                    timerRef.current = null
+                    return 0
+                }
+                return prev - 1
+            })
+        }, 1000)
+    }
+
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (invoiceStatus === 'funded' && timerRef.current) {
+            clearInterval(timerRef.current)
+            timerRef.current = null
+            setSecondsLeft(null)
+        }
+    }, [invoiceStatus])
 
     useEffect(() => {
         if (!sessionId) return
@@ -59,47 +98,47 @@ export default function FundNotes() {
             .catch(err => console.log("USD conversion error:", err))
     }, [totalSats])
 
-    useEffect(() => {
+    const handleInvoice = async () => {
         if (walletStatus !== 'opened') return
         if (!wallet || !walletId || !sessionId || invoiceMsats === 0) return
         if (paymentStatus === 'paid') return
         if (isRunningRef.current) return
 
         isRunningRef.current = true
+        try {
+            dispatch(setLoader({ loader: true, loaderMessage: "Processing Invoice" }))
 
-        const handleInvoice = async () => {
-            try {
-                dispatch(setLoader({ loader: true, loaderMessage: "Processing Invoice" }))
+            console.log("creating invoice for", invoiceMsats, "msats")
+            const result = await createInvoice(wallet, invoiceMsats)
+            const currentOpId = result.operation_id
 
-                console.log("creating invoice for", invoiceMsats, "msats")
-                const result = await createInvoice(wallet, invoiceMsats)
-                const currentOpId = result.operation_id
-
-                startPaymentSession(
-                    wallet, currentOpId,
-                    () => dispatch(updateSessionThunk({ operationId: currentOpId, paymentStatus: 'paid' })),
-                    (status) => {
-                        setInvoiceStatus(status)
-                        if (status === 'canceled') {
-                            isRunningRef.current = false
-                            dispatch(setErrorWithTimeout({ type: "Invoice Cancelled", message: '' }))
-                        }
+            startPaymentSession(
+                wallet, currentOpId,
+                () => dispatch(updateSessionThunk({ operationId: currentOpId, paymentStatus: 'paid' })),
+                (status) => {
+                    setInvoiceStatus(status)
+                    if (status === 'canceled') {
+                        isRunningRef.current = false
+                        dispatch(setErrorWithTimeout({ type: "Invoice Cancelled", message: '' }))
                     }
-                )
+                }
+            )
 
-                dispatch(updateSessionThunk({ operationId: currentOpId, upgradeStep: false }))
-                setCreatedInvoice(result.invoice)
-                setInvoiceStatus('waiting')
-            } catch (err) {
-                console.error("[FundNotes] invoice error:", err)
-                const message = err instanceof Error ? err.message : String(err);
-                dispatch(setErrorWithTimeout({ type: "Invoice Error", message }))
-                isRunningRef.current = false
-            } finally {
-                dispatch(setLoader({ loader: false, loaderMessage: null }))
-            }
+            dispatch(updateSessionThunk({ operationId: currentOpId, upgradeStep: false }))
+            setCreatedInvoice(result.invoice)
+            setInvoiceStatus('waiting')
+            startCountdown(300)
+        } catch (err) {
+            console.error("[FundNotes] invoice error:", err)
+            const message = err instanceof Error ? err.message : String(err);
+            dispatch(setErrorWithTimeout({ type: "Invoice Error", message }))
+            isRunningRef.current = false
+        } finally {
+            dispatch(setLoader({ loader: false, loaderMessage: null }))
         }
+    }
 
+    useEffect(() => {
         handleInvoice()
     }, [walletStatus, walletId, invoiceMsats, reduxOperationId])
 
@@ -120,6 +159,9 @@ export default function FundNotes() {
         }
     }
 
+    const isExpired = secondsLeft === 0
+    const isUrgent = secondsLeft !== null && secondsLeft > 0 && secondsLeft <= 60
+
     return (
         <>
             {loader && <Loader message={loaderMessage} />}
@@ -139,6 +181,7 @@ export default function FundNotes() {
                         </AlertDescription>
                     </div>
                 </Alert>
+
                 <div className="text-center m-6">
                     <h3 className="text-xl font-semibold text-[#4B5971]">
                         Total Fundable Amount:{" "}
@@ -147,15 +190,36 @@ export default function FundNotes() {
                     <p className="text-sm text-[#4B5563]">~ ${usdAmount}</p>
                 </div>
 
-                {invoiceStatus && (
-                    <div
-                        className="mx-auto mt-4 flex items-center gap-2 px-4 py-2 rounded-full border border-blue-600 bg-blue-50 text-blue-800 text-sm font-medium w-fit"
-                    >
-                        <span className="capitalize">{invoiceStatus}</span>
+                {(invoiceStatus || secondsLeft !== null) && (
+                    <div className="flex items-center justify-center gap-3 flex-wrap mx-auto mt-2">
+                        {invoiceStatus && (
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-blue-600 bg-blue-50 text-blue-800 text-sm font-medium">
+                                <span className="capitalize">{invoiceStatus}</span>
+                            </div>
+                        )}
+
+                        {secondsLeft !== null && invoiceStatus !== 'claimed' && (
+                            <div className={`
+                                flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-mono font-semibold
+                                transition-colors duration-300
+                                ${isExpired
+                                    ? 'border-red-500 bg-red-50 text-red-700'
+                                    : isUrgent
+                                        ? 'border-orange-400 bg-orange-50 text-orange-700'
+                                        : 'border-gray-300 bg-gray-50 text-gray-600'
+                                }
+                            `}>
+                                <i className={`fa-regular fa-clock text-xs ${isUrgent && !isExpired ? 'animate-pulse' : ''}`}></i>
+                                {isExpired
+                                    ? 'Invoice expired'
+                                    : formatCountdown(secondsLeft)
+                                }
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {createdInvoice && (
+                {createdInvoice && !isExpired && (
                     <section className="max-w-md mx-auto mt-4 space-y-4 mb-4">
                         <div className="flex flex-col items-center p-6 border rounded-xl bg-white dark:bg-zinc-900 shadow-sm">
                             <div className="p-4 bg-white rounded-lg border">
@@ -190,6 +254,17 @@ export default function FundNotes() {
                         </p>
                     </section>
                 )}
+
+                {isExpired && (
+                    <div className="max-w-md mx-auto mt-6 text-center space-y-3 px-4">
+                        <p className="text-red-600 font-semibold">Invoice expired</p>
+                        <p className="text-sm text-muted-foreground">
+                            This invoice is no longer valid.
+                        </p>
+                        <Button onClick={handleInvoice}>Generate new invoice</Button>
+                    </div>
+                )}
+
                 <DrawerFooter>
                     <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>
                         Back

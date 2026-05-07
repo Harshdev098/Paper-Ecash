@@ -7,8 +7,13 @@ import { getAssetUrl, getNaturalDesignSize } from "@/utils/url";
 import QRCode from "react-qr-code";
 import { FastAverageColor } from "fast-average-color";
 
+interface PreviewDesignProps {
+    design: Design
+    totalSats: number
+    onColorsResolved?: (colors: { fg: string; bg: string }) => void
+}
 
-export default function PreviewDesign({ design, totalSats }: { design: Design, totalSats: number }) {
+export default function PreviewDesign({ design, totalSats, onColorsResolved }: PreviewDesignProps) {
     const dispatch = useDispatch()
     const [renderSize, setRenderSize] = useState<{ height: number, width: number }>({ width: 1, height: 1 });
     const [naturalSize, setNaturalSize] = useState<{ height: number, width: number }>(getNaturalDesignSize(design?.id));
@@ -25,12 +30,10 @@ export default function PreviewDesign({ design, totalSats }: { design: Design, t
             observerRef.current.disconnect();
             observerRef.current = null;
         }
-
         if (!node) {
             imgRef.current = null;
             return;
         }
-
         imgRef.current = node;
 
         const observer = new ResizeObserver((entries) => {
@@ -48,25 +51,20 @@ export default function PreviewDesign({ design, totalSats }: { design: Design, t
         const fac = new FastAverageColor();
 
         const handleLoad = async () => {
-            setNaturalSize({
-                width: img.naturalWidth,
-                height: img.naturalHeight,
-            });
-
+            setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
             try {
                 const color = await fac.getColorAsync(img);
                 const colors = getSmartColors(img);
 
                 if (colors) {
-                    setQrColors({
-                        bg: colors.light,
-                        fg: colors.dark,
-                    });
+                    const resolved = { fg: colors.dark, bg: colors.light }
+                    setQrColors(resolved)
+                    onColorsResolved?.(resolved)
                 }
                 setBgColor(color.hex);
             } catch (err) {
                 console.error(err);
-            }finally{
+            } finally {
                 fac.destroy();
             }
         };
@@ -85,60 +83,56 @@ export default function PreviewDesign({ design, totalSats }: { design: Design, t
     }, [design?.frontPath]);
 
     return (
-        <>
-            <div
-                className="md:w-1/2 w-full mt-4 flex items-end justify-center transition-colors duration-500 relative"
-                style={{
-                    background: `linear-gradient(to bottom, white, ${bgColor})`
-                }}
-            >
-                <div className="w-full flex justify-center items-center pb-8 px-4">
-                    <div className="relative inline-block" key={design?.frontPath}>
-                        <img
-                            ref={setImgRef}
-                            src={getAssetUrl(design?.frontPath ?? '')}
-                            alt="Ecash Notes"
-                            crossOrigin="anonymous"
-                            className="block w-full h-auto drop-shadow-lg"
-                        />
-                        {design && (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    left: design.qr.x * scaleX,
-                                    top: design.qr.y * scaleY,
-                                    width: design.qr.width * scaleX,
-                                    height: design.qr.height * scaleY,
-                                }}
-                            >
-                                <QRCode
-                                    value={"A dumb value for previewing"}
-                                    bgColor={qrColors.bg}
-                                    fgColor={qrColors.fg}
-                                    style={{ width: "100%", height: "100%" }}
-                                />
-                            </div>
-                        )}
-                        {design && (
-                            <h2
-                                style={{
-                                    position: "absolute",
-                                    left: design.denomination.x * scaleX,
-                                    top: design.denomination.y * scaleY,
-                                    fontSize: design.denomination.fontSize * scaleX,
-                                    fontWeight: "bold",
-                                    color: qrColors.fg,
-                                    margin: 0,
-                                    lineHeight: 1,
-                                    whiteSpace: "nowrap",
-                                }}
-                            >
-                                {totalSats} SATS
-                            </h2>
-                        )}
-                    </div>
+        <div
+            className="md:w-1/2 w-full mt-4 flex items-end justify-center transition-colors duration-500 relative"
+            style={{ background: `linear-gradient(to bottom, white, ${bgColor})` }}
+        >
+            <div className="w-full flex justify-center items-center pb-8 px-4">
+                <div className="relative inline-block" key={design?.frontPath}>
+                    <img
+                        ref={setImgRef}
+                        src={getAssetUrl(design?.frontPath ?? '')}
+                        alt="Ecash Notes"
+                        crossOrigin="anonymous"
+                        className="block w-full h-auto drop-shadow-lg"
+                    />
+                    {design && (
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: design.qr.x * scaleX,
+                                top: design.qr.y * scaleY,
+                                width: design.qr.width * scaleX,
+                                height: design.qr.height * scaleY,
+                            }}
+                        >
+                            <QRCode
+                                value="A dumb value for previewing"
+                                bgColor={qrColors.bg}
+                                fgColor={qrColors.fg}
+                                style={{ width: "100%", height: "100%" }}
+                            />
+                        </div>
+                    )}
+                    {design && (
+                        <h2
+                            style={{
+                                position: "absolute",
+                                left: design.denomination.x * scaleX,
+                                top: design.denomination.y * scaleY,
+                                fontSize: design.denomination.fontSize * scaleX,
+                                fontWeight: "bold",
+                                color: qrColors.fg,
+                                margin: 0,
+                                lineHeight: 1,
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {totalSats} SATS
+                        </h2>
+                    )}
                 </div>
             </div>
-        </>
+        </div>
     )
 }

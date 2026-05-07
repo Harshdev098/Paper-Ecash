@@ -2,14 +2,14 @@ import { Button } from "@/components/ui/button";
 import { DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { extractDesign } from "@/services/SessionControl";
 import { getNotesData } from "@/utils/db";
 import { setLoader } from "@/redux/slices/LoaderSlice"
 import Loader from "@/components/Loader";
-import { generateNotesPDF, getSmartColors } from "@/services/NotesDownloader";
+import { generateNotesPDF } from "@/services/NotesDownloader";
 import { useFedimint } from "@/context/FedimintManager";
 import { convertFromSat } from "@/services/Federation";
 import PreviewDesign from "@/components/PreviewDesign";
@@ -32,14 +32,13 @@ export default function DownloadPDF() {
     const noteTotalMsats = noteMsats.reduce((s, m) => s + m, 0)
     const totalSats = (noteTotalMsats * noteCount) / 1000
     const { wallet } = useFedimint()
-    const imgRef = useRef<HTMLImageElement | null>(null);
     const [reclaimWindow, setReclaimWindow] = useState(false)
-    const [openLnurl,setOpenLnurl]=useState<boolean>(false)
+    const [openLnurl, setOpenLnurl] = useState<boolean>(false)
 
-    const desginData=useMemo(()=>{
-        if(!designId) return null;
+    const desginData = useMemo(() => {
+        if (!designId) return null;
         return extractDesign(designId)
-    },[designId])
+    }, [designId])
 
     useEffect(() => {
         const load = async () => {
@@ -60,38 +59,6 @@ export default function DownloadPDF() {
         }
         load()
     }, [sessionId])
-
-    useEffect(() => {
-        const img = imgRef.current;
-        if (!img) return;
-        dispatch(setLoader({ loader: true, loaderMessage: "Previewing the Notes" }))
-
-        const handleLoad = async () => {
-            try {
-                const colors = getSmartColors(img);
-
-                if (colors) {
-                    setQrColors({
-                        bg: colors.light,
-                        fg: colors.dark,
-                    });
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        if (img.complete && img.naturalWidth > 0) {
-            handleLoad();
-        } else {
-            img.addEventListener('load', handleLoad);
-        }
-        dispatch(setLoader({ loader: false, loaderMessage: null }))
-
-        return () => {
-            img.removeEventListener('load', handleLoad);
-        };
-    }, [design?.frontPath]);
 
     useEffect(() => {
         const getUSDAmount = async () => {
@@ -126,7 +93,11 @@ export default function DownloadPDF() {
         <>
             {loader && <Loader message={loaderMessage} />}
             <section className="flex flex-col md:flex-row flex-wrap">
-                {design && <PreviewDesign design={design} totalSats={totalSats} />}
+                {design && <PreviewDesign
+                    design={design}
+                    totalSats={totalSats}
+                    onColorsResolved={(colors) => setQrColors(colors)}
+                />}
 
                 <div className="md:w-1/2 w-full flex flex-col justify-between p-6">
                     <DrawerHeader>
@@ -199,7 +170,7 @@ export default function DownloadPDF() {
                             <i className="fa-solid fa-download text-base"></i> Download PDF
                         </Button>
                         <Button
-                            onClick={()=>setOpenLnurl(true)}
+                            onClick={() => setOpenLnurl(true)}
                             className="w-full bg-pink-200 text-pink-600 hover:bg-pink-100 hover:text-pink-700 text-base font-semibold"
                         >
                             <i className="fa-solid fa-hand-holding-heart text-base"></i> Support Designer

@@ -54,8 +54,6 @@ function hexToRgb(hex: string) {
     return r ? { r: parseInt(r[1], 16), g: parseInt(r[2], 16), b: parseInt(r[3], 16) } : null
 }
 
-// Pixel-perfect QR: read raw module matrix, stamp each module as exact integer pixels.
-// No antialiasing, no scaling blur — matches what the Rust qrcode crate does.
 async function renderQRPixelPerfect(
     data: string,
     destCtx: CanvasRenderingContext2D,
@@ -63,7 +61,6 @@ async function renderQRPixelPerfect(
     destW: number, destH: number,
     darkHex: string, lightHex: string,
 ): Promise<void> {
-    // Render at 1px-per-module to extract the raw boolean matrix
     const tempCanvas = document.createElement('canvas')
     await QRCode.toCanvas(tempCanvas, data, {
         width: 1,
