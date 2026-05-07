@@ -82,11 +82,9 @@ export const createInvoice = async (wallet: Wallet, amountMsats: number): Promis
 export const searchInvoiceForOperation = async (wallet: Wallet, operationId: string | null): Promise<LnTransaction | null> => {
     try {
         const transaction = await wallet.federation.listTransactions()
-        let found = false
         for (let tx of transaction) {
             if (tx.kind === 'ln') {
                 if (tx.operationId === operationId) {
-                    found = true
                     const parsedInvoice = (await parseBolt11Invoice((tx as LightningTransaction).invoice))
                     console.log("the parsed invoice is ", parsedInvoice)
                     let amount = parsedInvoice.amount
@@ -97,9 +95,6 @@ export const searchInvoiceForOperation = async (wallet: Wallet, operationId: str
                     return { ...(tx as LightningTransaction), amount, expired };
                 }
             }
-        }
-        if (found === false) {
-            return null;
         }
         return null;
     } catch (err) {

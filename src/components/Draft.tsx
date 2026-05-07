@@ -47,7 +47,7 @@ export default function Draft() {
                                 <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
 
                                     <img
-                                        src={getAssetUrl(design.path)}
+                                        src={getAssetUrl(design.frontPath)}
                                         alt={design.DesignName}
                                         className="aspect-video w-full object-cover"
                                     />

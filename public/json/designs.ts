@@ -1,11 +1,12 @@
-import type { DesignResponse } from "@/types/init.type";
+import type {DesignResponse} from '../../src/types/init.type'
 
 const data: DesignResponse = {
     designs: [
         {
             id: 1,
             DesignName: "Vintage Ecash",
-            path: "Vintage.png",
+            frontPath: "Vintage/front.png",
+            backPath:"Vintage/back",
             designer: "Harshdev098",
             lnurl: "denimkangroo19@primal.net",
             label: ["Community", "Regular"],
@@ -24,7 +25,8 @@ const data: DesignResponse = {
         {
             id: 2,
             DesignName: "Futuristic Ecash",
-            path: "Futuristic.png",
+            frontPath: "Futuristic/front.png",
+            backPath:"Futuristic/back.png",
             designer: "Harshdev098",
             lnurl: "denimkangroo19@primal.net",
             label: ["Cypherpunk", "Event"],
@@ -43,7 +45,8 @@ const data: DesignResponse = {
         {
             id: 3,
             DesignName: "Golden Era",
-            path: "GoldenEra.png",
+            frontPath: "GoldenEra/front.png",
+            backPath:"GoldenEra/back.png",
             designer: "Harshdev098",
             lnurl: "denimkangroo19@primal.net",
             label: ["Gifts", "Regular"],
@@ -62,7 +65,8 @@ const data: DesignResponse = {
         {
             id: 4,
             DesignName: 'Prestige',
-            path: "Prestige.png",
+            frontPath: "Prestige/front.png",
+            backPath:"Prestige/back.png",
             designer: "Harshdev098",
             lnurl: "denimkangroo19@primal.net",
             label: ["Community", "Event"],
@@ -81,7 +85,8 @@ const data: DesignResponse = {
         {
             id: 5,
             DesignName: 'Glith Ledger',
-            path: "GlithLedger.png",
+            frontPath: "GlithLedger/front.png",
+            backPath:"GlithLedger/back.png",
             designer: "Harshdev098",
             lnurl: "denimkangroo19@primal.net",
             label: ["Gifts", "Event", "Regular"],
@@ -99,8 +104,5 @@ const data: DesignResponse = {
         },
     ]
 }
-
-export const FIGMA_DESIGN_WIDTH = 1748;
-export const FIGMA_DESIGN_HEIGHT = 874;
 
 export default data;

@@ -1,10 +1,9 @@
 import { PDFDocument } from 'pdf-lib'
 import QRCode from 'qrcode'
 import type { Design } from '@/types/init.type'
-import { getAssetUrl } from '@/utils/url'
+import { getAssetUrl, getNaturalDesignSize } from '@/utils/url'
 import type { Wallet } from '@fedimint/core-web'
 import { getEcashToken } from './Federation'
-import { FIGMA_DESIGN_WIDTH, FIGMA_DESIGN_HEIGHT } from '../../public/designs/json/designs'
 import { saveEcashOperation } from '@/utils/db'
 
 const PAGE_SIZES = {
@@ -141,17 +140,18 @@ async function renderNoteToCanvas(
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, canvasW, canvasH)
 
-    const img = await loadImage(getAssetUrl(design.path))
+    const noteSize=getNaturalDesignSize(design.id)
+    const img = await loadImage(getAssetUrl(design.frontPath) ?? "")
     const margin = canvasW * 0.04
     const noteW = canvasW - margin * 2
-    const noteH = noteW * (FIGMA_DESIGN_HEIGHT / FIGMA_DESIGN_WIDTH)
+    const noteH = noteW * (noteSize.height / noteSize.width)
     const noteX = margin
     const noteY = (canvasH - noteH) / 2
 
     ctx.drawImage(img, noteX, noteY, noteW, noteH)
 
-    const scaleX = noteW / FIGMA_DESIGN_WIDTH
-    const scaleY = noteH / FIGMA_DESIGN_HEIGHT
+    const scaleX = noteW / noteSize.width
+    const scaleY = noteH / noteSize.height
 
     await renderQRPixelPerfect(
         ecashToken, ctx,

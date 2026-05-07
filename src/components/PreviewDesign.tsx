@@ -3,14 +3,15 @@ import { getSmartColors } from "@/services/NotesDownloader";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import type { Design } from "@/types/init.type";
-import { getAssetUrl } from "@/utils/url";
+import { getAssetUrl, getNaturalDesignSize } from "@/utils/url";
 import QRCode from "react-qr-code";
 import { FastAverageColor } from "fast-average-color";
 
-export default function PreviewDesign({ design, totalSats }: { design: Design | null, totalSats: number }) {
+
+export default function PreviewDesign({ design, totalSats }: { design: Design, totalSats: number }) {
     const dispatch = useDispatch()
-    const [renderSize, setRenderSize] = useState({ width: 1, height: 1 });
-    const [naturalSize, setNaturalSize] = useState({ width: 1748, height: 874 });
+    const [renderSize, setRenderSize] = useState<{ height: number, width: number }>({ width: 1, height: 1 });
+    const [naturalSize, setNaturalSize] = useState<{ height: number, width: number }>(getNaturalDesignSize(design?.id));
     const [qrColors, setQrColors] = useState({ bg: "#ffffff", fg: "#000000" });
     const [bgColor, setBgColor] = useState("#eff6ff");
     const scaleX = renderSize.width / naturalSize.width;
@@ -81,7 +82,7 @@ export default function PreviewDesign({ design, totalSats }: { design: Design | 
             img.removeEventListener('load', handleLoad);
             fac.destroy();
         };
-    }, [design?.path]);
+    }, [design?.frontPath]);
 
     return (
         <>
@@ -92,10 +93,10 @@ export default function PreviewDesign({ design, totalSats }: { design: Design | 
                 }}
             >
                 <div className="w-full flex justify-center items-center pb-8 px-4">
-                    <div className="relative inline-block" key={design?.path}>
+                    <div className="relative inline-block" key={design?.frontPath}>
                         <img
                             ref={setImgRef}
-                            src={getAssetUrl(design?.path ?? '')}
+                            src={getAssetUrl(design?.frontPath ?? '')}
                             alt="Ecash Notes"
                             crossOrigin="anonymous"
                             className="block w-full h-auto drop-shadow-lg"
@@ -111,7 +112,7 @@ export default function PreviewDesign({ design, totalSats }: { design: Design | 
                                 }}
                             >
                                 <QRCode
-                                    value={design.lnurl}
+                                    value={"A dumb value for previewing"}
                                     bgColor={qrColors.bg}
                                     fgColor={qrColors.fg}
                                     style={{ width: "100%", height: "100%" }}

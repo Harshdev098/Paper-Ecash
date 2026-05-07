@@ -1,6 +1,6 @@
 import type { DraftDesign, session } from "@/types/init.type";
 import { openedDB, SESSION_STORE_NAME } from "@/utils/db"
-import designs from '../../public/designs/json/designs'
+import designs from '../../public/json/designs'
 import type { AppDispatch } from "@/redux/store";
 import { updateLocalStep } from "@/redux/slices/SessionSlice";
 

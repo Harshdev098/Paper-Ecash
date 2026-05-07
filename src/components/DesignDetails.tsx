@@ -8,6 +8,8 @@ import { useSearchParams } from "react-router-dom";
 import { createSessionThunk, resetSession } from "@/redux/slices/SessionSlice";
 import { searchDesignsInDraft } from "@/services/SessionControl";
 import { getAssetUrl } from "@/utils/url";
+import { useState } from "react";
+import LnurlPay from "./LnurlPay";
 
 
 interface DesignCardProps {
@@ -18,6 +20,9 @@ interface DesignCardProps {
 export default function DesignDetails({ open, onClose }: DesignCardProps) {
     const choosenDesign = useSelector((state: RootState) => state.choosenDesign)
     const [searchParams, setSearchParams] = useSearchParams()
+    const [openLnurl,setOpenLnurl]=useState<boolean>(false)
+    const [lnurlAddress,setLnurlAddress]=useState<string | null>(null)
+    const [designerName,setDesignerName]=useState<string>("")
     const dispatch = useDispatch<AppDispatch>()
 
     const createNewSession = () => {
@@ -53,13 +58,19 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
         }
     }
 
+    const setPrompts=()=>{
+        setOpenLnurl(true);
+        setLnurlAddress(choosenDesign?.lnurl ?? null);
+        setDesignerName(choosenDesign?.designer ?? '')
+    }
+
     return (
         <>
             <Dialog open={open} onOpenChange={handleClose}>
                 <DialogContent className="max-w-5xl rounded-2xl p-0 overflow-hidden">
                     <div className="relative group">
                         <img
-                            src={getAssetUrl(choosenDesign?.path ?? '')}
+                            src={getAssetUrl(choosenDesign?.frontPath ?? '')}
                             alt={choosenDesign?.DesignName}
                             className="w-full object-contain"
                         />
@@ -98,6 +109,7 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
                         <DialogFooter className="flex flex-row justify-end items-center gap-3">
                             <Button
                                 variant="outline"
+                                onClick={setPrompts}
                                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-pink-50 border-pink-400 text-pink-600 hover:bg-pink-100 hover:text-pink-700 flex items-center justify-center"
                             >
                                 <i className="fa-solid fa-hand-holding-heart text-base"></i>
@@ -113,6 +125,7 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
                     </div>
                 </DialogContent>
             </Dialog>
+            {openLnurl && lnurlAddress && <LnurlPay open={openLnurl} onClose={setOpenLnurl} address={lnurlAddress} designerName={designerName} />}
         </>
     )
 }

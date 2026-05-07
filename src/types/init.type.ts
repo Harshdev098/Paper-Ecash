@@ -12,12 +12,14 @@ export type Label = typeof LABELS[number]
 export type Design = {
     id: number,
     DesignName: string,
-    path: string,
+    frontPath: string,
+    backPath:string,
     designer: string,
-    lnurl: string,
+    lnurl?: string,
     label: Label[],
-    qr:{x:number,y:number,height:number,width:number},
-    denomination:{x:number,y:number,fontSize:number}
+    qr: { x: number, y: number, height: number, width: number },
+    denomination: { x: number, y: number, fontSize: number },
+    designSize?: { height: number, width: number }
 }
 
 export type DesignResponse = {
@@ -27,8 +29,8 @@ export type DesignResponse = {
 export type session = {
     sessionId: string | null,
     designId: number | null,
-    walletId:string | null,
-    operationId:string | null
+    walletId: string | null,
+    operationId: string | null
     paymentStatus: 'paid' | 'pending'
     currentStep: number,
     federationId: string | null,
@@ -49,11 +51,11 @@ export type notesPayload = {
 }
 
 export type DraftDesign = Design & {
-  sessionId: string,
-  currentStep:number
+    sessionId: string,
+    currentStep: number
 }
 
-export type EcashData={
-    sessionId:string,
-    operationId:string[]
+export type EcashData = {
+    sessionId: string,
+    operationId: string[]
 }

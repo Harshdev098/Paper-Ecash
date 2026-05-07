@@ -5,7 +5,7 @@ import type { AppDispatch, RootState } from "@/redux/store"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { getNotesData } from "@/utils/db"
 import QRCode from "react-qr-code"
-import { convertFromSat, createInvoice, searchInvoiceForOperation } from "@/services/Federation"
+import { convertFromSat, createInvoice } from "@/services/Federation"
 import { useFedimint } from "@/context/FedimintManager"
 import { updateSessionThunk } from "@/redux/slices/SessionSlice"
 import Stepper from "@/components/Stepper"
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { BackToStep } from "@/services/SessionControl"
 import { setLoader } from "@/redux/slices/LoaderSlice"
 import Loader from "@/components/Loader"
-import { isAlreadyProcessing, startPaymentSession, type InvoiceStatus } from "@/services/PaymentManager"
+import { startPaymentSession, type InvoiceStatus } from "@/services/PaymentManager"
 import { setErrorWithTimeout } from "@/redux/slices/Alert"
 
 export default function FundNotes() {
@@ -56,7 +56,7 @@ export default function FundNotes() {
         if (totalSats === 0) return
         convertFromSat(totalSats)
             .then(setUsdAmount)
-            .catch(err => console.log("[FundNotes] USD conversion error:", err))
+            .catch(err => console.log("USD conversion error:", err))
     }, [totalSats])
 
     useEffect(() => {
@@ -71,38 +71,7 @@ export default function FundNotes() {
             try {
                 dispatch(setLoader({ loader: true, loaderMessage: "Processing Invoice" }))
 
-                const existingTx = reduxOperationId
-                    ? await searchInvoiceForOperation(wallet, reduxOperationId)
-                    : null
-
-                console.log("[FundNotes] existing tx:", existingTx)
-
-                const canReuse =
-                    existingTx &&
-                    !existingTx.expired &&
-                    existingTx.amount === totalSats
-
-                if (canReuse && reduxOperationId) {
-                    console.log("[FundNotes] reusing invoice for op:", reduxOperationId)
-                    setCreatedInvoice(existingTx!.invoice)
-                    setInvoiceStatus('waiting')
-                    if (!isAlreadyProcessing(reduxOperationId)) {
-                        startPaymentSession(
-                            wallet, reduxOperationId,
-                            () => dispatch(updateSessionThunk({ operationId: reduxOperationId, paymentStatus: 'paid' })),
-                            (status) => {
-                                setInvoiceStatus(status)
-                                if (status === 'canceled') {
-                                    isRunningRef.current = false
-                                    dispatch(setErrorWithTimeout({ type: "Invoice Cancelled", message: '' }))
-                                }
-                            }
-                        )
-                    }
-                    return
-                }
-
-                console.log("[FundNotes] creating invoice for", invoiceMsats, "msats")
+                console.log("creating invoice for", invoiceMsats, "msats")
                 const result = await createInvoice(wallet, invoiceMsats)
                 const currentOpId = result.operation_id
 

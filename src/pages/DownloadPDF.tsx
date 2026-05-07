@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { extractDesign } from "@/services/SessionControl";
@@ -15,6 +15,7 @@ import { convertFromSat } from "@/services/Federation";
 import PreviewDesign from "@/components/PreviewDesign";
 import ReclaimNotes from "@/components/ReclaimNotes";
 import { setErrorWithTimeout } from "@/redux/slices/Alert";
+import LnurlPay from "@/components/LnurlPay";
 
 
 export default function DownloadPDF() {
@@ -33,6 +34,12 @@ export default function DownloadPDF() {
     const { wallet } = useFedimint()
     const imgRef = useRef<HTMLImageElement | null>(null);
     const [reclaimWindow, setReclaimWindow] = useState(false)
+    const [openLnurl,setOpenLnurl]=useState<boolean>(false)
+
+    const desginData=useMemo(()=>{
+        if(!designId) return null;
+        return extractDesign(designId)
+    },[designId])
 
     useEffect(() => {
         const load = async () => {
@@ -84,7 +91,7 @@ export default function DownloadPDF() {
         return () => {
             img.removeEventListener('load', handleLoad);
         };
-    }, [design?.path]);
+    }, [design?.frontPath]);
 
     useEffect(() => {
         const getUSDAmount = async () => {
@@ -119,7 +126,7 @@ export default function DownloadPDF() {
         <>
             {loader && <Loader message={loaderMessage} />}
             <section className="flex flex-col md:flex-row flex-wrap">
-                <PreviewDesign design={design} totalSats={totalSats} />
+                {design && <PreviewDesign design={design} totalSats={totalSats} />}
 
                 <div className="md:w-1/2 w-full flex flex-col justify-between p-6">
                     <DrawerHeader>
@@ -192,6 +199,7 @@ export default function DownloadPDF() {
                             <i className="fa-solid fa-download text-base"></i> Download PDF
                         </Button>
                         <Button
+                            onClick={()=>setOpenLnurl(true)}
                             className="w-full bg-pink-200 text-pink-600 hover:bg-pink-100 hover:text-pink-700 text-base font-semibold"
                         >
                             <i className="fa-solid fa-hand-holding-heart text-base"></i> Support Designer
@@ -201,11 +209,12 @@ export default function DownloadPDF() {
                             className=" bg-white border border-[#319BD9] hover:bg-white text-[#319BD9] text-base font-semibold"
                             onClick={() => setReclaimWindow(!reclaimWindow)}
                         >
-                            <i className="fa-solid fa-rotate-left"></i> Reclaim Notes
+                            <i className="fa-solid fa-rotate-left"></i> Track Notes Status
                         </Button>
                     </DrawerFooter>
                 </div>
             </section>
+            {openLnurl && desginData?.lnurl && <LnurlPay open={openLnurl} onClose={setOpenLnurl} address={desginData?.lnurl} designerName={desginData?.designer} />}
             {reclaimWindow && <ReclaimNotes wallet={wallet} noteTotalMsats={noteTotalMsats / 1000} sessionId={sessionId ?? ''} />}
         </>
     );

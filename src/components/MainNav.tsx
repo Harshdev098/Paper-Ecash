@@ -10,11 +10,8 @@ export default function MainNav() {
     return (
         <nav className='w-full px-6 md:px-10 py-3 bg-[#FAFAFA] shadow-md'>
             <div className='flex justify-between items-center'>
-
-                {/* Logo */}
                 <img src={PaperMintLogo} alt="PaperMint Logo" width="140px" onClick={()=>navigate('/')} />
 
-                {/* Desktop Menu */}
                 <ul className='hidden md:flex items-center font-medium text-[18px]'>
                     <li>
                         <input
@@ -24,14 +21,13 @@ export default function MainNav() {
                         />
                     </li>
                     <li>
-                        <Button className='bg-[#319BD9] hover:bg-[#5399fb] text-white pl-3 pr-4 text-base'>
+                        <Button className='bg-[#319BD9] hover:bg-[#5399fb] text-white pl-3 pr-4 text-base' onClick={()=> window.open('https://github.com/Harshdev098/Paper-Ecash/blob/main/DesignerGuide.md','_blank')}>
                             <i className="fa-solid fa-plus"></i>
                             Add Design
                         </Button>
                     </li>
                 </ul>
 
-                {/* Hamburger Button */}
                 <button
                     className='md:hidden text-[#394354]'
                     onClick={() => setIsOpen(!isOpen)}
@@ -62,7 +58,6 @@ export default function MainNav() {
                 </button>
             </div>
 
-            {/* Mobile Menu */}
             {isOpen && (
                 <div className='md:hidden mt-4 flex flex-col items-center bg-white rounded-lg py-4 space-y-4 shadow-md'>
                     <input
@@ -72,7 +67,7 @@ export default function MainNav() {
                     />
                     <Button
                         className='bg-[#319BD9] hover:bg-[#5399fb] text-white px-6 text-base'
-                        onClick={() => setIsOpen(false)}
+                        onClick={()=> window.open('https://github.com/Harshdev098/Paper-Ecash/blob/main/DesignerGuide.md','_blank')}
                     >
                         <i className="fa-solid fa-plus mr-2"></i>
                         Add Design

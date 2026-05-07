@@ -31,10 +31,10 @@ These dimensions map to a physical **3.5 × 1.75 inch** card at 500 DPI — the 
 
 For each design you contribute, you must provide:
 
-- [ ] **`YourDesignName.png`** — the exported note image (see §6 for exact export settings)
-- [ ] **JSON entry** — filled into `public/designs/json/designs.ts` (see §7)
-- [ ] **QR placeholder coordinates** — `x`, `y`, `width`, `height` (see §4)
-- [ ] **Denomination text coordinates** — `x`, `y`, `fontSize` (see §5)
+- [ ] **`YourDesignName.png`** — the exported note image
+- [ ] **JSON entry** — filled into `public/designs/json/designs.ts`
+- [ ] **QR placeholder coordinates** — `x`, `y`, `width`, `height`
+- [ ] **Denomination text coordinates** — `x`, `y`, `fontSize`
 
 
 ### File Naming
@@ -63,7 +63,7 @@ Open `public/designs/json/designs.ts` and add a new entry to the `designs` array
 {
     id: 6,                          // increment from last id
     DesignName: "Your Design Name",
-    path: "YourDesignName.png",     // must match filename in public/designs/images/
+    path: "YourDesignName.png",     // must match filename in public/designs/
     designer: "YourHandle",         // your name or handle
     lnurl: "your@lnurl.com",       // your lightning address for tips (optional)
     label: ["Community", "Regular"], // pick from the label list below
