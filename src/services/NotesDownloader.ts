@@ -4,11 +4,11 @@ import type { Design } from '@/types/init.type'
 import { getAssetUrl, getNaturalDesignSize } from '@/utils/url'
 import type { Wallet } from '@fedimint/core-web'
 import { getEcashToken } from './Federation'
-import { saveEcashOperation } from '@/utils/db'
+import { getEcashNoteData, saveEcashOperation } from '@/utils/db'
 import type { AppDispatch } from '@/redux/store'
 import { setLoader } from '@/redux/slices/LoaderSlice'
 import { getMnemonic } from '@fedimint/core-web'
-import { encryptTokens } from '@/utils/ecash'
+import { decryptTokens, encryptTokens } from '@/utils/ecash'
 
 const PAGE_SIZES = {
     a4: { width: 595.28, height: 841.89 },
@@ -400,23 +400,59 @@ export async function generateNotesPDF(
         const noteTotalMsats = noteMsats.reduce((s, m) => s + m, 0)
         const displaySats = Number((noteTotalMsats / 1000).toFixed(2))
 
+        const unloadHandler = (e: BeforeUnloadEvent) => {
+            e.preventDefault()
+            e.returnValue = 'Ecash generation in progress'
+        }
+
+        window.addEventListener('beforeunload', unloadHandler)
+
+        const BACK_QR_URL = 'https://fedimint.org/wallets'
+        let tokenArray: string[] = []
+
+        const mnemonic = await getMnemonic()
+        if (!mnemonic?.length) throw new Error("Wallet mnemonic not found, cannot create reclaim")
+
+        const existing = await getEcashNoteData(sessionId)
+        console.log("existing ecash notes data", existing)
+        if (existing?.encryptedTokens) {
+            tokenArray = await decryptTokens(existing?.encryptedTokens, mnemonic)
+        }
+        console.log("the existing token array", tokenArray);
+
+        const remaining = noteCount - tokenArray.length
+        console.log("the remaining count for which to generate the ecash ", remaining)
+
+        if (remaining < 0) {
+            throw new Error("Recovered more tokens than requested")
+        }
+
+        const required = remaining * noteTotalMsats
         const balance = await wallet.balance.getBalance()
-        const required = noteTotalMsats * noteCount
+
         if (balance < required) {
             throw new Error(
-                `Insufficient balance: have ${(balance / 1000).toFixed(2)} sats, ` +
-                `need ${(required / 1000).toFixed(2)} sats`
+                `Insufficient balance: need ${(required / 1000).toFixed(2)} sats`
             )
         }
 
-        const BACK_QR_URL = 'https://fedimint.org/wallets'
-        const tokenArray: string[] = []
-
-        for (let i = 0; i < noteCount; i++) {
-            dispatch(setLoader({ loader: true, loaderMessage: `Generating note ${i + 1} of ${noteCount}...` }))
-
+        for (let i = 0; i < remaining; i++) {
+            dispatch(setLoader({ loader: true, loaderMessage: `Generating note ${(existing?.tokenCount ?? 0) + i + 1} of ${noteCount}...` }))
             const token = await getEcashToken(wallet, noteMsats)
             tokenArray.push(token)
+            const encryptedTokens = await encryptTokens(tokenArray, mnemonic)
+            await saveEcashOperation({
+                sessionId,
+                encryptedTokens,
+                tokenCount: tokenArray.length,
+                createdAt: existing?.createdAt ?? Date.now(),
+            })
+        }
+        window.removeEventListener('beforeunload', unloadHandler)
+
+        for (let i = 0; i < noteCount; i++) {
+            const token = tokenArray[i]
+            dispatch(setLoader({ loader: true, loaderMessage: `Creating and Downloading the Paper ecash notes` }))
 
             const frontPng = await renderNoteToCanvas(
                 design, displaySats, token, fgColor, bgColor, dpi, printSize, includeTamperRegion, false
@@ -446,19 +482,6 @@ export async function generateNotesPDF(
                 })
             }
         }
-
-        dispatch(setLoader({ loader: true, loaderMessage: `Creating and Downloading the Paper ecash notes` }))
-
-        const mnemonic = await getMnemonic()
-        if (!mnemonic?.length) throw new Error("Wallet mnemonic not found, cannot create reclaim")
-
-        const encryptedTokens = await encryptTokens(tokenArray, mnemonic)
-        await saveEcashOperation({
-            sessionId,
-            encryptedTokens,
-            tokenCount: tokenArray.length,
-            createdAt: Date.now(),
-        })
 
         const pdfBytes = await pdfDoc.save()
         const blob = new Blob([pdfBytes as BufferSource], { type: 'application/pdf' })
