@@ -18,6 +18,7 @@ export type Design = {
     lnurl?: string,
     label: Label[],
     qr: { x: number, y: number, height: number, width: number },
+    backQr: { x: number, y: number, height: number, width: number },
     denomination: { x: number, y: number, fontSize: number },
     designSize?: { height: number, width: number }
 }
@@ -56,6 +57,8 @@ export type DraftDesign = Design & {
 }
 
 export type EcashData = {
-    sessionId: string,
-    operationId: string[]
+    sessionId: string
+    encryptedTokens: string
+    tokenCount: number
+    createdAt: number
 }

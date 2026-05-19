@@ -6,20 +6,30 @@ const data: DesignResponse = {
             id: 1,
             DesignName: "Vintage Ecash",
             frontPath: "Vintage/front.png",
-            backPath:"Vintage/back",
+            backPath:"Vintage/back.png",
             designer: "Harshdev098",
             lnurl: "denimkangroo19@primal.net",
             label: ["Community", "Regular"],
             qr: {
-                x: 137,
-                y: 132,
-                width: 594,
-                height: 589
+                x: 163,
+                y: 182,
+                width: 505,
+                height: 500
+            },
+            backQr:{
+                x: 283,
+                y: 232,
+                width: 369,
+                height: 366
             },
             denomination: {
-                x: 768,
-                y: 392,
-                fontSize: 78,
+                x: 794,
+                y: 396,
+                fontSize: 76,
+            },
+            designSize:{
+                height:874,
+                width:1748,
             }
         },
         {
@@ -31,15 +41,25 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Cypherpunk", "Event"],
             qr: {
-                x: 110,
-                y: 214,
-                width: 557,
-                height: 552
+                x: 147,
+                y: 242,
+                width: 461,
+                height: 457
+            },
+            backQr:{
+                x: 661,
+                y: 244,
+                width: 389,
+                height: 385
             },
             denomination: {
-                x: 1221,
-                y: 726,
-                fontSize: 72,
+                x: 1223,
+                y: 699,
+                fontSize: 76,
+            },
+            designSize:{
+                height:874,
+                width:1748,
             }
         },
         {
@@ -51,15 +71,25 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Gifts", "Regular"],
             qr: {
-                x: 178,
-                y: 199,
-                width: 507,
-                height: 502
+                x: 162,
+                y: 222,
+                width: 461,
+                height: 457
+            },
+            backQr:{
+                x: 1162,
+                y: 300,
+                width: 326,
+                height: 323
             },
             denomination: {
-                x: 128,
-                y: 755,
-                fontSize: 58,
+                x: 162,
+                y: 734,
+                fontSize: 64,
+            },
+            designSize:{
+                height:874,
+                width:1748,
             }
         },
         {
@@ -71,15 +101,25 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Community", "Event"],
             qr: {
-                x: 1210,
-                y: 274,
-                width: 366,
-                height: 363
+                x: 1091,
+                y: 258,
+                width: 360,
+                height: 357
+            },
+            backQr:{
+                x: 701,
+                y: 284,
+                width: 345,
+                height: 342
             },
             denomination: {
-                x: 661,
-                y: 636,
-                fontSize: 72,
+                x: 715,
+                y: 615,
+                fontSize: 64,
+            },
+            designSize:{
+                height:874,
+                width:1748,
             }
         },
         {
@@ -91,15 +131,25 @@ const data: DesignResponse = {
             lnurl: "denimkangroo19@primal.net",
             label: ["Gifts", "Event", "Regular"],
             qr: {
-                x: 125,
-                y: 165,
-                width: 480,
-                height: 476
+                x: 149,
+                y: 197,
+                width: 410,
+                height: 407
+            },
+            backQr:{
+                x: 1064,
+                y: 287,
+                width: 345,
+                height: 342
             },
             denomination: {
-                x: 649,
-                y: 393,
-                fontSize: 72,
+                x: 630,
+                y: 363,
+                fontSize: 76,
+            },
+            designSize:{
+                height:874,
+                width:1748,
             }
         },
     ]
