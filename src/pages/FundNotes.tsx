@@ -64,7 +64,7 @@ export default function FundNotes() {
     }, [])
 
     useEffect(() => {
-        if (invoiceStatus === 'funded' && timerRef.current) {
+        if (invoiceStatus === 'claiming' && timerRef.current) {
             clearInterval(timerRef.current)
             timerRef.current = null
             setSecondsLeft(null)
@@ -106,9 +106,8 @@ export default function FundNotes() {
 
         isRunningRef.current = true
         try {
-            dispatch(setLoader({ loader: true, loaderMessage: "Processing Invoice" }))
-
             console.log("creating invoice for", invoiceMsats, "msats")
+            dispatch(setLoader({ loader: true, loaderMessage: "Processing Invoice" }))
             const result = await createInvoice(wallet, invoiceMsats)
             const currentOpId = result.operation_id
 
@@ -219,7 +218,7 @@ export default function FundNotes() {
                     </div>
                 )}
 
-                {createdInvoice && !isExpired && (
+                {createdInvoice && !isExpired && !(invoiceStatus==='claiming' || invoiceStatus==='claimed') && (
                     <section className="max-w-md mx-auto mt-4 space-y-4 mb-4">
                         <div className="flex flex-col items-center p-6 border rounded-xl bg-white dark:bg-zinc-900 shadow-sm">
                             <div className="p-4 bg-white rounded-lg border">
@@ -266,9 +265,9 @@ export default function FundNotes() {
                 )}
 
                 <DrawerFooter>
-                    <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>
+                    {!(invoiceStatus==='claiming' || invoiceStatus==='claimed') && <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>
                         Back
-                    </Button>
+                    </Button>}
                     <p
                         className="p-1 m-2 text-[#4B5971] text-sm text-center font-semibold cursor-pointer"
                         onClick={getPaymentStatus}

@@ -65,7 +65,7 @@ export function startPaymentSession(
             }
 
             if (state === 'funded') {
-                onStateChange?.('funded')
+                onStateChange?.('claiming')
                 return
             }
 

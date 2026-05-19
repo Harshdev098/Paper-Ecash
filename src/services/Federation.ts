@@ -2,6 +2,7 @@ import { api } from '@/api/observerClient'
 import type { FormatedFederationData, LnTransaction } from '@/types/fedimint.type'
 import { getSessionBySessionId } from '@/utils/db';
 import { parseBolt11Invoice, type CreateBolt11Response, type LightningTransaction, type Wallet } from '@fedimint/core-web';
+
 const SATS_PER_BTC = 100_000_000;
 
 
@@ -106,15 +107,12 @@ export const searchInvoiceForOperation = async (wallet: Wallet, operationId: str
     }
 }
 
-export const getEcashToken = async (wallet: Wallet, amountMsats: number) => {
+export const getEcashToken = async (wallet: Wallet, noteMsats: number[]) => {
     try {
-        console.log(`spending ${amountMsats} msats`)
-        const notes = await wallet.mint.spendNotes(amountMsats, Number.MAX_SAFE_INTEGER)
-        const token = notes.notes
-        const operationId = notes.operation_id
-        const byteLen = new TextEncoder().encode(token).byteLength
-        console.log(`token: ${token.length} chars, ${byteLen} bytes`)
-        return { token, operationId }
+        console.log(`spending exact denominations:`, noteMsats)
+
+        const token = await wallet.mint.spendExactDenominationNotes(noteMsats, Number.MAX_SAFE_INTEGER)
+        return token;
     } catch (err) {
         if (err instanceof Error) {
             throw new Error(`Federation error occurred: ${err.message}`);
@@ -146,7 +144,7 @@ const fetchExchangeRates = async () => {
 export const convertFromSat = async (sats: number): Promise<number> => {
     const btcValue = sats / SATS_PER_BTC;
     const rates = await fetchExchangeRates();
-    console.log("the rates are ",rates)
+    console.log("the rates are ", rates)
 
     return Number((btcValue * (rates?.usd || localStorage.getItem('usdRate'))).toFixed(4));
 };

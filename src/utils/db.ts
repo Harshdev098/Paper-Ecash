@@ -1,8 +1,7 @@
 import type { EcashData, notesPayload, session } from "@/types/init.type"
 import { openDB } from "idb"
-
 export const DB_NAME = "PaperEcash"
-export const DB_VERSION = 3
+export const DB_VERSION = 4
 export const SESSION_STORE_NAME = "sessions"
 export const NOTES_STORE_NAME = "notes"
 export const ECASH_STORE_NAME = "ecash"
@@ -100,28 +99,54 @@ export async function getNotesData(sessionId: string): Promise<notesPayload | un
     }
 }
 
+export async function purgeExpiredEcashVaults(): Promise<void> {
+    try {
+        const db = await openedDB
+        const all = await db.getAll(ECASH_STORE_NAME)
+        const now = Date.now()
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000
+        for (const item of all) {
+            if (item.createdAt && now - item.createdAt > ONE_DAY_MS) {
+                await db.delete(ECASH_STORE_NAME, item.sessionId)
+                console.log(`purged expired ecash vault for session ${item.sessionId}`)
+            }
+        }
+    } catch (err) {
+        console.warn('purge error:', err)
+    }
+}
+
 export async function saveEcashOperation(ecashData: EcashData) {
     try {
         const db = await openedDB
         await db.put(ECASH_STORE_NAME, ecashData)
     } catch (err) {
         if (err instanceof Error) {
-            throw new Error(`An error occured while saving operation: ${err.message}`)
+            throw new Error(`An error occurred while saving operation: ${err.message}`)
         } else {
-            throw new Error(`An error occured while saving operation: ${err}`)
+            throw new Error(`An error occurred while saving operation: ${err}`)
         }
     }
 }
 
-export async function getEcashNoteData(sessionId: string): Promise<EcashData> {
+export async function getEcashNoteData(sessionId: string): Promise<EcashData | undefined> {
     try {
         const db = await openedDB
-        return db.get(ECASH_STORE_NAME, sessionId)
+        const data = await db.get(ECASH_STORE_NAME, sessionId)
+        if (!data) return undefined
+        // Enforce 24h expiry at read time too
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000
+        if (data.createdAt && Date.now() - data.createdAt > ONE_DAY_MS) {
+            await db.delete(ECASH_STORE_NAME, sessionId)
+            console.log(`[vault] deleted expired vault on read for session ${sessionId}`)
+            return undefined
+        }
+        return data
     } catch (err) {
         if (err instanceof Error) {
-            throw new Error(`An error occured while getting operation: ${err.message}`)
+            throw new Error(`An error occurred while getting operation: ${err.message}`)
         } else {
-            throw new Error(`An error occured while getting operation: ${err}`)
+            throw new Error(`An error occurred while getting operation: ${err}`)
         }
     }
 }
