@@ -21,21 +21,22 @@ import LnurlPay from "@/components/LnurlPay";
 export default function DownloadPDF() {
     const dispatch = useDispatch<AppDispatch>()
     const { designId, sessionId } = useSelector((state: RootState) => state.SessionSlice)
-    const design = designId ? extractDesign(designId) : null;
     const [dpi, setDpi] = useState<"300" | "72" | "150">("300");
     const [printSize, setPrintSize] = useState<"a4" | "letter" | "a5">('a4')
-    const [qrColors, setQrColors] = useState({ bg: "#ffffff", fg: "#000000" });
+    const [qrColors, setQrColors] = useState({ fg: "#000000", bg: "#ffffff" });
     const { loader, loaderMessage } = useSelector((state: RootState) => state.LoaderSlice)
     const [usdAmount, setUSDAmount] = useState<number>(0)
     const [noteMsats, setNoteMsats] = useState<number[]>([])
     const [noteCount, setNoteCount] = useState(1)
     const noteTotalMsats = noteMsats.reduce((s, m) => s + m, 0)
-    const totalSats = (noteTotalMsats * noteCount) / 1000
+    const totalSats = Number(((noteTotalMsats * noteCount) / 1000).toFixed(2))
     const { wallet } = useFedimint()
-    const [reclaimWindow, setReclaimWindow] = useState(false)
+    const [reclaimWindow, setReclaimWindow] = useState<boolean>(false)
     const [openLnurl, setOpenLnurl] = useState<boolean>(false)
+    const [includeTamperRegion, setIncludeTamperRegion] = useState<boolean>(false);
+    const [downloading,setDownloading]=useState<boolean>(false)
 
-    const desginData = useMemo(() => {
+    const design = useMemo(() => {
         if (!designId) return null;
         return extractDesign(designId)
     }, [designId])
@@ -63,6 +64,7 @@ export default function DownloadPDF() {
     useEffect(() => {
         const getUSDAmount = async () => {
             try {
+            (window as any).wallet=wallet
                 const usdValue = await convertFromSat(totalSats)
                 setUSDAmount(usdValue)
             } catch (err) {
@@ -79,13 +81,27 @@ export default function DownloadPDF() {
             if (!sessionId) throw new Error("session not found")
             if (noteMsats.length === 0) throw new Error("Note composition not found")
             dispatch(setLoader({ loader: true, loaderMessage: "Creating and downloading the PDF" }))
-            await generateNotesPDF(design, sessionId, noteMsats, noteCount, dpi, printSize, qrColors.fg, qrColors.bg, wallet)
+            setDownloading(true)
+            await generateNotesPDF(
+                design,
+                sessionId,
+                noteMsats,
+                noteCount,
+                dpi,
+                printSize,
+                qrColors.fg,
+                qrColors.bg,
+                wallet,
+                dispatch,
+                includeTamperRegion,
+            )
         } catch (err) {
             console.log("error downloading pdf", err)
             const message = err instanceof Error ? err.message : String(err);
             dispatch(setErrorWithTimeout({ type: "Notes Downloading Error", message }))
         } finally {
             dispatch(setLoader({ loader: false, loaderMessage: null }))
+            setDownloading(false)
         }
     }
 
@@ -93,11 +109,16 @@ export default function DownloadPDF() {
         <>
             {loader && <Loader message={loaderMessage} />}
             <section className="flex flex-col md:flex-row flex-wrap">
-                {design && <PreviewDesign
-                    design={design}
-                    totalSats={totalSats}
-                    onColorsResolved={(colors) => setQrColors(colors)}
-                />}
+                {design && (
+                    <PreviewDesign
+                        design={design}
+                        noteTotalMsats={Number((noteTotalMsats/1000).toFixed(2))}
+                        showTamperRegion={includeTamperRegion}
+                        onColorsResolved={(colors) => {
+                            setQrColors({ fg: colors.fg, bg: colors.bg })
+                        }}
+                    />
+                )}
 
                 <div className="md:w-1/2 w-full flex flex-col justify-between p-6">
                     <DrawerHeader>
@@ -118,13 +139,20 @@ export default function DownloadPDF() {
                             <p className="text-sm text-[#4B5971]">
                                 Add optional tamper-evident or scratch-off regions
                             </p>
-                            <button className="self-end md:self-auto px-3 py-1 text-xs md:text-sm bg-[#319BD9] text-white rounded-md hover:bg-[#0e90dc]">
-                                <i className="fa-solid fa-plus"></i> Add
-                            </button>
+                            <Button onClick={() => setIncludeTamperRegion(!includeTamperRegion)} className="self-end md:self-auto px-3 py-1 text-xs md:text-sm bg-[#319BD9] text-white rounded-md hover:bg-[#0e90dc]">
+                                {!includeTamperRegion ? (
+                                    <>
+                                        <i className="fa-solid fa-plus mr-1"></i>
+                                        Add
+                                    </>
+                                ) : (
+                                    "Remove"
+                                )}
+                            </Button>
                         </div>
 
-                        <div className="flex flex-wrap flex-row gap-4 justify-center md:gap-20 items-center">
-                            <div className="my-6">
+                        <div className="flex flex-wrap flex-row gap-4 justify-center items-center">
+                            <div className="my-2">
                                 <Field className="w-full max-w-48">
                                     <FieldLabel>DPI</FieldLabel>
                                     <Select value={dpi} onValueChange={(value) => setDpi(value as "300" | "72" | "150")}>
@@ -141,7 +169,7 @@ export default function DownloadPDF() {
                                     </Select>
                                 </Field>
                             </div>
-                            <div className="my-6">
+                            <div className="my-2">
                                 <Field className="w-full max-w-48">
                                     <FieldLabel>Print Size</FieldLabel>
                                     <Select value={printSize} onValueChange={(value) => setPrintSize(value as "a4" | "letter" | "a5")}>
@@ -165,6 +193,7 @@ export default function DownloadPDF() {
                         <Button
                             type="button"
                             className="bg-[#319BD9] hover:bg-[#0e90dc] text-base font-semibold"
+                            disabled={downloading}
                             onClick={DownloadPDF}
                         >
                             <i className="fa-solid fa-download text-base"></i> Download PDF
@@ -177,16 +206,32 @@ export default function DownloadPDF() {
                         </Button>
                         <Button
                             type="button"
-                            className=" bg-white border border-[#319BD9] hover:bg-white text-[#319BD9] text-base font-semibold"
+                            className="bg-white border border-[#319BD9] hover:bg-white text-[#319BD9] text-base font-semibold"
                             onClick={() => setReclaimWindow(!reclaimWindow)}
                         >
-                            <i className="fa-solid fa-rotate-left"></i> Track Notes Status
+                            <i className="fa-solid fa-rotate-left"></i> Reclaim Ecash Notes
                         </Button>
                     </DrawerFooter>
                 </div>
             </section>
-            {openLnurl && desginData?.lnurl && <LnurlPay open={openLnurl} onClose={setOpenLnurl} address={desginData?.lnurl} designerName={desginData?.designer} />}
-            {reclaimWindow && <ReclaimNotes wallet={wallet} noteTotalMsats={noteTotalMsats / 1000} sessionId={sessionId ?? ''} />}
+            {openLnurl && design?.lnurl && (
+                <LnurlPay open={openLnurl} onClose={setOpenLnurl} address={design.lnurl} designerName={design.designer} />
+            )}
+            <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${reclaimWindow
+                    ? "max-h-[2000px] opacity-100 mt-4"
+                    : "max-h-0 opacity-0"
+                    }`}
+            >
+                {reclaimWindow && (
+                    <div className="border rounded-xl bg-muted/20 p-3 sm:p-4">
+                        <ReclaimNotes
+                            noteTotalSats={Number((noteTotalMsats / 1000).toFixed(2))}
+                            sessionId={sessionId ?? ""}
+                        />
+                    </div>
+                )}
+            </div>
         </>
     );
 }

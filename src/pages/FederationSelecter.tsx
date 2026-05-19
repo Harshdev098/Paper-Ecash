@@ -137,19 +137,19 @@ export default function FederationSelecter() {
 
                 <h4 className="text-center text-sm text-muted-foreground">OR</h4>
 
-                <div className="flex flex-col gap-6 pt-0 w-full">
-                    <ItemGroup className="w-full sm:w-[95%] mx-auto max-h-[250px] overflow-y-auto">
+                <div className="flex flex-col gap-2 pt-0 w-full">
+                    <ItemGroup className="w-full sm:w-[95%] mx-auto max-h-[220px] overflow-y-auto space-y-2">
                         {(federationList && federationList.length !== 0) && federationList.map((fed, index) => (
                             <Item
                                 key={index}
                                 variant="outline"
-                                className={`flex flex-col cursor-pointer m-2 ${selectedId === fed.id ? 'border-blue-600' : ''}`}
+                                className={`flex flex-col cursor-pointer p-3 sm:p-4 transition-all ${selectedId === fed.id ? 'border-blue-600' : ''}`}
                                 onClick={() => {
                                     setSelectedId(selectedId === fed.id ? null : fed.id)
                                     setInviteCode(selectedId === fed.id ? null : fed.invite)
                                 }}
                             >
-                                <div className="flex items-center w-full">
+                                <div className="flex items-center gap-2 w-full min-w-0">
                                     <ItemMedia>
                                         <Avatar>
                                             <AvatarImage src={""} className="grayscale" />
@@ -157,20 +157,20 @@ export default function FederationSelecter() {
                                         </Avatar>
                                     </ItemMedia>
 
-                                    <ItemContent className="gap-1 min-w-0">
-                                        <ItemTitle>
+                                    <ItemContent className="gap-0 min-w-0 flex-1">
+                                        <ItemTitle className="text-sm sm:text-lg font-semibold leading-tight">
                                             {fed.name}{' '}
                                             {fed.nostr_votes.avg && (
-                                                <span className='font-bold px-2 text-base text-yellow-700 bg-yellow-100'>
-                                                    <i className="fa-solid fa-star"></i>
+                                                <span className='font-bold px-1.5 py-0.5 text-xs rounded-md text-yellow-700 bg-yellow-100 ml-1'>
+                                                    <i className="fa-solid fa-star"></i> {" "}
                                                     {fed.nostr_votes.avg?.toFixed(1)}
                                                 </span>
                                             )}
                                         </ItemTitle>
-                                        <ItemDescription className='break-words'>{fed.id}</ItemDescription>
+                                        <ItemDescription className='truncate text-xs sm:text-sm text-muted-foreground'>{fed.id}</ItemDescription>
                                     </ItemContent>
 
-                                    <ItemActions className="flex items-center gap-2">
+                                    <ItemActions className="flex items-center gap-1 sm:gap-2 shrink-0">
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -183,9 +183,9 @@ export default function FederationSelecter() {
                                         </Button>
                                         <Button variant="ghost" size="icon">
                                             {selectedId === fed.id ? (
-                                                <i className="fa-solid fa-circle-check text-xl text-[#4B5971]"></i>
+                                                <i className="fa-solid fa-circle-check text-sm sm:text-base text-[#4B5971]"></i>
                                             ) : (
-                                                <i className="fa-solid fa-plus text-xl text-[#4B5971]"></i>
+                                                <i className="fa-solid fa-plus text-sm sm:text-base text-[#4B5971]"></i>
                                             )}
                                         </Button>
                                     </ItemActions>

@@ -9,7 +9,7 @@ import DownloadPDF from "@/pages/DownloadPDF"
 
 interface SessionCardProps {
   open: boolean
-  onClose: () => void
+  onClose: (open: boolean) => void
 }
 
 export default function SessionCard({ open, onClose }: SessionCardProps) {

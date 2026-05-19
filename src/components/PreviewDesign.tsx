@@ -9,11 +9,12 @@ import { FastAverageColor } from "fast-average-color";
 
 interface PreviewDesignProps {
     design: Design
-    totalSats: number
+    noteTotalMsats: number
     onColorsResolved?: (colors: { fg: string; bg: string }) => void
+    showTamperRegion?: boolean
 }
 
-export default function PreviewDesign({ design, totalSats, onColorsResolved }: PreviewDesignProps) {
+export default function PreviewDesign({ design, noteTotalMsats, onColorsResolved, showTamperRegion = false }: PreviewDesignProps) {
     const dispatch = useDispatch()
     const [renderSize, setRenderSize] = useState<{ height: number, width: number }>({ width: 1, height: 1 });
     const [naturalSize, setNaturalSize] = useState<{ height: number, width: number }>(getNaturalDesignSize(design?.id));
@@ -21,6 +22,8 @@ export default function PreviewDesign({ design, totalSats, onColorsResolved }: P
     const [bgColor, setBgColor] = useState("#eff6ff");
     const scaleX = renderSize.width / naturalSize.width;
     const scaleY = renderSize.height / naturalSize.height;
+
+    const TAMPER_PADDING = 8;
 
     const imgRef = useRef<HTMLImageElement | null>(null);
     const observerRef = useRef<ResizeObserver | null>(null);
@@ -55,7 +58,6 @@ export default function PreviewDesign({ design, totalSats, onColorsResolved }: P
             try {
                 const color = await fac.getColorAsync(img);
                 const colors = getSmartColors(img);
-
                 if (colors) {
                     const resolved = { fg: colors.dark, bg: colors.light }
                     setQrColors(resolved)
@@ -82,6 +84,11 @@ export default function PreviewDesign({ design, totalSats, onColorsResolved }: P
         };
     }, [design?.frontPath]);
 
+    const qrLeft   = design.qr.x * scaleX;
+    const qrTop    = design.qr.y * scaleY;
+    const qrWidth  = design.qr.width * scaleX;
+    const qrHeight = design.qr.height * scaleY;
+
     return (
         <div
             className="md:w-1/2 w-full mt-4 flex items-end justify-center transition-colors duration-500 relative"
@@ -96,14 +103,18 @@ export default function PreviewDesign({ design, totalSats, onColorsResolved }: P
                         crossOrigin="anonymous"
                         className="block w-full h-auto drop-shadow-lg"
                     />
+
+                    {/* QR code — always visible */}
                     {design && (
                         <div
                             style={{
                                 position: "absolute",
-                                left: design.qr.x * scaleX,
-                                top: design.qr.y * scaleY,
-                                width: design.qr.width * scaleX,
-                                height: design.qr.height * scaleY,
+                                left: qrLeft,
+                                top: qrTop,
+                                width: qrWidth,
+                                height: qrHeight,
+                                zIndex: 2,
+                                pointerEvents: "none",
                             }}
                         >
                             <QRCode
@@ -114,6 +125,25 @@ export default function PreviewDesign({ design, totalSats, onColorsResolved }: P
                             />
                         </div>
                     )}
+
+                    {/* Tamper border — dashed rectangle around QR, QR stays fully visible */}
+                    {design && showTamperRegion && (
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: qrLeft - TAMPER_PADDING,
+                                top: qrTop - TAMPER_PADDING,
+                                width: qrWidth + TAMPER_PADDING * 2,
+                                height: qrHeight + TAMPER_PADDING * 2,
+                                border: "2px dashed #e53e3e",
+                                borderRadius: 4,
+                                boxSizing: "border-box",
+                                pointerEvents: "none",
+                                zIndex: 3,
+                            }}
+                        />
+                    )}
+
                     {design && (
                         <h2
                             style={{
@@ -126,9 +156,10 @@ export default function PreviewDesign({ design, totalSats, onColorsResolved }: P
                                 margin: 0,
                                 lineHeight: 1,
                                 whiteSpace: "nowrap",
+                                zIndex: 3,
                             }}
                         >
-                            {totalSats} SATS
+                            {noteTotalMsats} SATS
                         </h2>
                     )}
                 </div>
