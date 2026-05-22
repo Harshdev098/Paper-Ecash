@@ -152,6 +152,36 @@ const data: DesignResponse = {
                 width:1748,
             }
         },
+        {
+            id: 6,
+            DesignName: 'Bitcoin Pizza Day',
+            frontPath: "PizzaDay/front.png",
+            backPath:"PizzaDay/back.png",
+            designer: "Harshdev098",
+            lnurl: "denimkangroo19@primal.net",
+            label: ["Event"],
+            qr: {
+                x: 107,
+                y: 232,
+                width: 488,
+                height: 484
+            },
+            backQr:{
+                x: 729,
+                y: 293,
+                width: 290,
+                height: 287
+            },
+            denomination: {
+                x: 1203,
+                y: 730,
+                fontSize: 74,
+            },
+            designSize:{
+                height:874,
+                width:1748,
+            }
+        },
     ]
 }
 
