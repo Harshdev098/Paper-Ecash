@@ -1,4 +1,4 @@
-import type { FedimintTotals, FederationSummary } from '@/types/fedimint.type';
+import type { FedimintTotals, FederationSummary, SpendCheckResponse } from '@/types/fedimint.type';
 
 const BASE_URL = 'https://observer.fedimint.org/api';
 
@@ -73,6 +73,29 @@ export const api = {
         if (!response.ok) {
             throw new Error(`Failed to fetch health for federation ${id}`);
         }
+        return response.json();
+    },
+
+    async checkNoncesSpent(
+        federationId: string,
+        nonces: string[]
+    ): Promise<SpendCheckResponse> {
+        if (!nonces.length) return {};
+ 
+        const response = await fetch(
+            `${BASE_URL}/federations/${federationId}/nonces/spend`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nonces }),
+            }
+        );
+ 
+        if (!response.ok) {
+            const text = await response.text().catch(() => 'unknown error');
+            throw new Error(`Observer error ${response.status}: ${text}`);
+        }
+ 
         return response.json();
     },
 };

@@ -228,6 +228,7 @@ export default function DownloadPDF() {
                         <ReclaimNotes
                             noteTotalSats={Number((noteTotalMsats / 1000).toFixed(2))}
                             sessionId={sessionId ?? ""}
+                            wallet={wallet}
                         />
                     </div>
                 )}

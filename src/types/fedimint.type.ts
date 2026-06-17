@@ -61,3 +61,25 @@ export interface NavItem {
     href: string;
     active: boolean;
 }
+
+interface SpendInfo {
+    session_index: number;
+    estimated_timestamp: string | null;
+}
+
+export interface NoteRedemptionStatus {
+    noteIndex: number
+    spent: boolean | null
+    redeemedAt: string | null
+    sessionIndex: number | null
+}
+
+export interface RedemptionResult {
+    notes: NoteRedemptionStatus[]
+    totalNotes: number
+    spentNotes: number
+    unspentNotes: number
+    checkedAt: string
+}
+
+export type SpendCheckResponse = Record<string, SpendInfo>;

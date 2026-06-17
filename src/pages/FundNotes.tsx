@@ -75,7 +75,6 @@ export default function FundNotes() {
         if (!sessionId) return
         const load = async () => {
             try {
-                dispatch(setLoader({ loader: true, loaderMessage: "Loading denomination" }))
                 const saved = await getNotesData(sessionId)
                 if (saved) {
                     setNoteMsats(saved.noteMsats ?? [])
@@ -84,8 +83,6 @@ export default function FundNotes() {
             } catch (err) {
                 const message = err instanceof Error ? err.message : String(err);
                 dispatch(setErrorWithTimeout({ type: "Notes Loader Error", message }))
-            } finally {
-                dispatch(setLoader({ loader: false, loaderMessage: null }))
             }
         }
         load()

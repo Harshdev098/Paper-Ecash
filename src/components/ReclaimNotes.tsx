@@ -4,18 +4,22 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useEffect, useState } from "react"
 import { getEcashNoteData } from "@/utils/db"
 import { decryptTokens } from "@/utils/ecash"
-import { getMnemonic } from "@fedimint/core-web"
+import { getMnemonic, type Wallet } from "@fedimint/core-web"
 import { useDispatch } from "react-redux"
 import type { AppDispatch } from "@/redux/store"
 import { setErrorWithTimeout } from "@/redux/slices/Alert"
 import QRCode from "react-qr-code"
+import type { RedemptionResult } from "@/types/fedimint.type"
+import { checkNotesRedemption } from "@/services/Redeemption"
 
 export default function ReclaimNotes({
     sessionId,
     noteTotalSats,
+    wallet,
 }: {
     sessionId: string
     noteTotalSats: number
+    wallet: Wallet | undefined
 }) {
     const [tokens, setTokens] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
@@ -23,6 +27,8 @@ export default function ReclaimNotes({
 
     const [selectedToken, setSelectedToken] = useState<string | null>(null)
     const [copied, setCopied] = useState(false)
+    const [redemptionResult, setRedemptionResult] = useState<RedemptionResult | null>(null)
+    const [checkingRedemption, setCheckingRedemption] = useState(false)
 
     const dispatch = useDispatch<AppDispatch>()
 
@@ -94,6 +100,23 @@ export default function ReclaimNotes({
         return `${hours}h ${mins}m`
     }
 
+    const handleCheckRedemption = async () => {
+        if (!wallet) {
+            dispatch(setErrorWithTimeout({ type: "Check Redemption Error", message:"Wallet not initialized" }))
+            return;
+        }
+        setCheckingRedemption(true)
+        try {
+            const result = await checkNotesRedemption(sessionId, wallet)
+            setRedemptionResult(result)
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            dispatch(setErrorWithTimeout({ type: "Check Redemption Error", message }))
+        } finally {
+            setCheckingRedemption(false)
+        }
+    }
+
     if (loading) {
         return (
             <div className="text-center py-8 text-muted-foreground text-sm">
@@ -128,34 +151,100 @@ export default function ReclaimNotes({
                     </p>
                 )}
 
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-xl border bg-white px-4 py-3">
+                    <div className="text-sm">
+                        {redemptionResult ? (
+                            <span className="text-[#4B5971]">
+                                <b className="text-red-600">{redemptionResult.spentNotes}</b>
+                                {" "}of{" "}
+                                <b>{redemptionResult.totalNotes}</b>
+                                {" "}notes redeemed
+                                <span className="text-gray-400 ml-2 text-xs">
+                                    · checked {new Date(redemptionResult.checkedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            </span>
+                        ) : (
+                            <span className="text-[#4B5563]">
+                                Check if recipients have redeemed their notes
+                            </span>
+                        )}
+                    </div>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={checkingRedemption || !wallet}
+                        onClick={handleCheckRedemption}
+                        className="shrink-0 border-[#319BD9] text-[#319BD9] hover:bg-blue-50 text-xs font-semibold"
+                    >
+                        {checkingRedemption ? (
+                            <>
+                                <span className="w-3 h-3 border border-[#319BD9] border-t-transparent rounded-full animate-spin mr-1.5" />
+                                Checking…
+                            </>
+                        ) : (
+                            <>
+                                <i className="fa-solid fa-rotate mr-1.5 text-xs" />
+                                {redemptionResult ? "Refresh" : "Check Status"}
+                            </>
+                        )}
+                    </Button>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {tokens.map((token, index) => (
-                        <Card
-                            key={index}
-                            className="shadow-md border"
-                        >
-                            <CardContent className="p-4 flex flex-col gap-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="font-semibold text-sm">
-                                        Note #{index + 1}
-                                    </span>
-                                </div>
+                    {tokens.map((token, index) => {
+                        const status = redemptionResult?.notes.find(n => n.noteIndex === index)
 
-                                <div className="text-lg font-bold text-primary">
-                                    {noteTotalSats}{" "}SATS
-                                </div>
+                        return (
+                            <Card key={index} className="shadow-md border">
+                                <CardContent className="p-4 flex flex-col gap-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-semibold text-sm">
+                                            Note #{index + 1}
+                                        </span>
 
-                                <Button
-                                    onClick={() =>
-                                        setSelectedToken(token)
-                                    }
-                                    className="w-full bg-[#319BD9] hover:bg-[#0e90dc]"
-                                >
-                                    View Reclaim QR
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                        {status && (
+                                            status.spent === true ? (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
+                                                    Redeemed
+                                                </span>
+                                            ) : status.spent === false ? (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                                                    Unspent
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                                                    Unknown
+                                                </span>
+                                            )
+                                        )}
+                                    </div>
+
+                                    <div className="text-lg font-bold text-primary">
+                                        {noteTotalSats} SATS
+                                    </div>
+
+                                    {status?.spent && status.redeemedAt && (
+                                        <p className="text-xs text-red-500 -mt-2">
+                                            <i className="fa-regular fa-clock mr-1" />
+                                            {new Date(status.redeemedAt).toLocaleString(undefined, {
+                                                month: 'short', day: 'numeric',
+                                                hour: '2-digit', minute: '2-digit',
+                                            })}
+                                        </p>
+                                    )}
+
+                                    <Button
+                                        onClick={() => setSelectedToken(token)}
+                                        className="w-full bg-[#319BD9] hover:bg-[#0e90dc]"
+                                    >
+                                        View Reclaim QR
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )
+                    })}
                 </div>
             </section>
 
