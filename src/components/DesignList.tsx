@@ -12,7 +12,7 @@ import { getAssetUrl } from '@/utils/url'
 
 
 export default function DesignList({ filteredDesigns }: { filteredDesigns: Design[] }) {
-    const choosenDesign=useSelector((state: RootState) => state.choosenDesign)
+    const choosenDesign = useSelector((state: RootState) => state.choosenDesign)
     const dispatch = useDispatch<AppDispatch>();
 
     const selectDesign = (design: Design) => {
@@ -32,15 +32,16 @@ export default function DesignList({ filteredDesigns }: { filteredDesigns: Desig
                     </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent className="flex-row justify-center gap-2">
-                    <Button className='bg-[#319BD9] hover:bg-[#5399fb]'>Use own Design</Button>
+                    <Button className='bg-brand hover:bg-[#5399fb]'>Use own Design</Button>
                 </EmptyContent>
             </Empty>}
             <ul className="grid gap-12 px-4 py-4 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,420px))] justify-center">
                 {filteredDesigns.map((design, index) => {
                     return (
                         <li key={index}>
-                            <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
-
+                            <Card
+                                className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
+                            >
                                 <img
                                     src={getAssetUrl(design.frontPath)}
                                     alt={design.DesignName}
@@ -72,7 +73,7 @@ export default function DesignList({ filteredDesigns }: { filteredDesigns: Desig
 
                                 <CardFooter>
                                     <Button
-                                        className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-base font-semibold"
+                                        className="w-full bg-brand text-brand-foreground hover:bg-[#5399fb] text-base font-semibold"
                                         onClick={() => selectDesign(design)}
                                     >
                                         Preview Design

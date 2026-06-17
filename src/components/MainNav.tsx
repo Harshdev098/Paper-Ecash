@@ -2,29 +2,35 @@ import { useState } from 'react'
 import PaperMintLogo from '../assets/PaperMintLogoBlack.png'
 import { Button } from './ui/button'
 import { useNavigate } from 'react-router-dom'
+import { useTheme } from 'next-themes'
 
 export default function MainNav() {
     const [isOpen, setIsOpen] = useState(false)
-    const navigate=useNavigate()
+    const navigate = useNavigate()
+    const { theme, setTheme } = useTheme()
 
     return (
-        <nav className='w-full px-6 md:px-10 py-3 bg-[#FAFAFA] shadow-md'>
+        <nav className='w-full px-6 md:px-10 py-3 bg-background shadow-md'>
             <div className='flex justify-between items-center'>
-                <img src={PaperMintLogo} alt="PaperMint Logo" width="140px" onClick={()=>navigate('/')} />
+                <img src={PaperMintLogo} alt="PaperMint Logo" width="140px" onClick={() => navigate('/')} />
 
                 <ul className='hidden md:flex items-center font-medium text-[18px]'>
                     <li>
-                        <input
-                            className="mx-3 py-2 bg-[#D9D9D9] text-[#394354] placeholder:text-[#394354] px-3 text-sm rounded-lg w-72"
-                            type="text"
-                            placeholder="Search Designs"
-                        />
-                    </li>
-                    <li>
-                        <Button className='bg-[#319BD9] hover:bg-[#5399fb] text-white pl-3 pr-4 text-base' onClick={()=> window.open('https://github.com/Harshdev098/Paper-Ecash/blob/main/DesignerGuide.md','_blank')}>
+                        <Button className='bg-brand hover:bg-[#5399fb] text-white pl-3 pr-4 text-base' onClick={() => window.open('https://github.com/Harshdev098/Paper-Ecash/blob/main/DesignerGuide.md', '_blank')}>
                             <i className="fa-solid fa-plus"></i>
                             Add Design
                         </Button>
+                    </li>
+                    <li
+                        onClick={() =>
+                            setTheme(theme === "dark" ? "light" : "dark")
+                        }
+                    >
+                        {theme === "dark" ? (
+                            <i className="fa-solid fa-moon text-2xl ml-3"></i>
+                        ) : (
+                            <i className="fa-solid fa-sun text-2xl ml-3"></i>
+                        )}
                     </li>
                 </ul>
 
@@ -61,13 +67,13 @@ export default function MainNav() {
             {isOpen && (
                 <div className='md:hidden mt-4 flex flex-col items-center bg-white rounded-lg py-4 space-y-4 shadow-md'>
                     <input
-                        className="py-2 bg-[#D9D9D9] text-[#394354] placeholder:text-[#394354] px-3 text-sm rounded-lg w-11/12"
+                        className="py-2 bg-muted text-[#394354] placeholder:text-[#394354] px-3 text-sm rounded-lg w-11/12"
                         type="text"
                         placeholder="Search Designs"
                     />
                     <Button
-                        className='bg-[#319BD9] hover:bg-[#5399fb] text-white px-6 text-base'
-                        onClick={()=> window.open('https://github.com/Harshdev098/Paper-Ecash/blob/main/DesignerGuide.md','_blank')}
+                        className='bg-brand hover:bg-[#5399fb] text-white px-6 text-base'
+                        onClick={() => window.open('https://github.com/Harshdev098/Paper-Ecash/blob/main/DesignerGuide.md', '_blank')}
                     >
                         <i className="fa-solid fa-plus mr-2"></i>
                         Add Design

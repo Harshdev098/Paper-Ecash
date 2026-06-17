@@ -131,15 +131,15 @@ export default function DownloadPDF() {
                     </DrawerHeader>
 
                     <div className="text-center m-6">
-                        <h3 className="text-xl font-semibold text-[#4B5971]">Amount: <b className="text-[#1C6FA7]">{totalSats} sats</b></h3>
-                        <p className="text-sm text-[#4B5563]">~ ${usdAmount}</p>
+                        <h3 className="text-xl font-semibold text-muted-foreground">Amount: <b className="text-[#1C6FA7]">{totalSats} sats</b></h3>
+                        <p className="text-sm text-muted-foreground">~ ${usdAmount}</p>
                     </div>
                     <div className="mt-4">
                         <div className="bg-yellow-100 rounded-lg p-3 flex flex-row justify-between items-center gap-2">
-                            <p className="text-sm text-[#4B5971]">
+                            <p className="text-sm text-muted-foreground">
                                 Add optional tamper-evident or scratch-off regions
                             </p>
-                            <Button onClick={() => setIncludeTamperRegion(!includeTamperRegion)} className="self-end md:self-auto px-3 py-1 text-xs md:text-sm bg-[#319BD9] text-white rounded-md hover:bg-[#0e90dc]">
+                            <Button onClick={() => setIncludeTamperRegion(!includeTamperRegion)} className="self-end md:self-auto px-3 py-1 text-xs md:text-sm bg-brand text-white rounded-md hover:bg-[#0e90dc]">
                                 {!includeTamperRegion ? (
                                     <>
                                         <i className="fa-solid fa-plus mr-1"></i>
@@ -192,7 +192,7 @@ export default function DownloadPDF() {
                     <DrawerFooter>
                         <Button
                             type="button"
-                            className="bg-[#319BD9] hover:bg-[#0e90dc] text-base font-semibold"
+                            className="bg-brand hover:bg-[#0e90dc] text-base font-semibold"
                             disabled={downloading}
                             onClick={DownloadPDF}
                         >
@@ -206,7 +206,7 @@ export default function DownloadPDF() {
                         </Button>
                         <Button
                             type="button"
-                            className="bg-white border border-[#319BD9] hover:bg-white text-[#319BD9] text-base font-semibold"
+                            className="bg-white border border-bg-brand-foreground hover:bg-white text-bg-brand-foreground text-base font-semibold"
                             onClick={() => setReclaimWindow(!reclaimWindow)}
                         >
                             <i className="fa-solid fa-rotate-left"></i> Reclaim Ecash Notes

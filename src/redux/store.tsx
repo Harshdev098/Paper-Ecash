@@ -4,7 +4,6 @@ import SessionSlice from "./slices/SessionSlice";
 import WalletSlice from "./slices/WalletSlice";
 import LoaderSlice from "./slices/LoaderSlice";
 import AlertSlice from "./slices/Alert";
-// import NoteSlice from "./slices/NoteSlice";
 
 export const store= configureStore({
     reducer:{
@@ -13,7 +12,6 @@ export const store= configureStore({
         WalletSlice:WalletSlice,
         LoaderSlice:LoaderSlice,
         AlertSlice:AlertSlice,
-        // NoteSlice: NoteSlice, 
     },
 })
 

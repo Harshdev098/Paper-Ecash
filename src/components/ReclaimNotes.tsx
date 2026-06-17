@@ -154,7 +154,7 @@ export default function ReclaimNotes({
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-xl border bg-white px-4 py-3">
                     <div className="text-sm">
                         {redemptionResult ? (
-                            <span className="text-[#4B5971]">
+                            <span className="text-muted-foreground">
                                 <b className="text-red-600">{redemptionResult.spentNotes}</b>
                                 {" "}of{" "}
                                 <b>{redemptionResult.totalNotes}</b>
@@ -164,7 +164,7 @@ export default function ReclaimNotes({
                                 </span>
                             </span>
                         ) : (
-                            <span className="text-[#4B5563]">
+                            <span className="text-muted-foreground">
                                 Check if recipients have redeemed their notes
                             </span>
                         )}
@@ -174,11 +174,11 @@ export default function ReclaimNotes({
                         variant="outline"
                         disabled={checkingRedemption || !wallet}
                         onClick={handleCheckRedemption}
-                        className="shrink-0 border-[#319BD9] text-[#319BD9] hover:bg-blue-50 text-xs font-semibold"
+                        className="shrink-0 border-bg-brand-foreground text-bg-brand-foreground hover:bg-blue-50 text-xs font-semibold"
                     >
                         {checkingRedemption ? (
                             <>
-                                <span className="w-3 h-3 border border-[#319BD9] border-t-transparent rounded-full animate-spin mr-1.5" />
+                                <span className="w-3 h-3 border border-bg-brand-foreground border-t-transparent rounded-full animate-spin mr-1.5" />
                                 Checking…
                             </>
                         ) : (
@@ -237,7 +237,7 @@ export default function ReclaimNotes({
 
                                     <Button
                                         onClick={() => setSelectedToken(token)}
-                                        className="w-full bg-[#319BD9] hover:bg-[#0e90dc]"
+                                        className="w-full bg-brand hover:bg-[#0e90dc]"
                                     >
                                         View Reclaim QR
                                     </Button>

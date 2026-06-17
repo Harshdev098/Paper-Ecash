@@ -62,13 +62,13 @@ export default function Main() {
             <section className='min-h-screen flex flex-col pb-20 md:pb-0'>
                 <MainNav />
 
-                <main className='flex-1 bg-[#F0F0F0] my-2'>
+                <main className='flex-1 bg-background my-2'>
                     <section className='flex items-center mx-5 justify-between pb-3'>
                         <div>
-                            <h2 className='text-[26px] font-bold mt-4 text-[#4B5971]'>
+                            <h2 className='text-[26px] font-bold mt-4 text-foreground'>
                                 Recommended Designs
                             </h2>
-                            <p className='text-[#4B5563]'>
+                            <p className='text-muted-foreground'>
                                 Browse & Manage verified designs
                             </p>
                         </div>
@@ -109,7 +109,7 @@ export default function Main() {
 
                     <Separator />
 
-                    <section className='mt-4 mx-6 px-4 py-3 bg-white rounded-xl flex flex-wrap gap-2 items-center w-fit'>
+                    <section className='mt-4 mx-6 px-4 py-3 bg-card rounded-xl flex flex-wrap gap-2 items-center w-fit'>
                         <TooltipProvider>
                             {(['Community', 'Event', 'Cypherpunk', 'Gifts', 'Regular', 'Other'] as Label[]).map(
                                 (label) => {
@@ -149,7 +149,7 @@ export default function Main() {
                         <button
                             onClick={() => setTabs('explore')}
                             className={`flex flex-col items-center text-sm ${tabs === 'explore'
-                                ? 'text-[#319BD9]'
+                                ? 'text-bg-brand-foreground'
                                 : 'text-gray-500'
                                 }`}
                         >
@@ -160,7 +160,7 @@ export default function Main() {
                         <button
                             onClick={() => setTabs('draft')}
                             className={`flex flex-col items-center text-sm ${tabs === 'draft'
-                                ? 'text-[#319BD9]'
+                                ? 'text-bg-brand-foreground'
                                 : 'text-gray-500'
                                 }`}
                         >
@@ -171,7 +171,7 @@ export default function Main() {
                         <button
                             onClick={() => setTabs('build')}
                             className={`flex flex-col items-center text-sm ${tabs === 'build'
-                                ? 'text-[#319BD9]'
+                                ? 'text-bg-brand-foreground'
                                 : 'text-gray-500'
                                 }`}
                         >

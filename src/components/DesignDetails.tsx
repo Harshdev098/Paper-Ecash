@@ -110,13 +110,13 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
                             <Button
                                 variant="outline"
                                 onClick={setPrompts}
-                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-pink-50 border-pink-400 text-pink-600 hover:bg-pink-100 hover:text-pink-700 flex items-center justify-center"
+                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-background border-pink-400 text-pink-600 hover:bg-pink-100 hover:text-pink-700 flex items-center justify-center"
                             >
                                 <i className="fa-solid fa-hand-holding-heart text-base"></i>
                             </Button>
                             <Button
                                 type="button"
-                                className="bg-[#319BD9] hover:bg-[#0e90dc] text-sm sm:text-base font-semibold px-3 py-2 sm:px-4 sm:py-3"
+                                className="bg-brand hover:bg-[#0e90dc] text-brand-foreground text-sm sm:text-base font-semibold px-3 py-2 sm:px-4 sm:py-3"
                                 onClick={startSession}
                             >
                                 Start session

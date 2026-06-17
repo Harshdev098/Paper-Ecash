@@ -44,7 +44,7 @@ export default function Draft() {
                     {draftDesigns.map((design, index) => {
                         return (
                             <li key={index}>
-                                <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40">
+                                <Card className="group relative w-full pt-0 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
 
                                     <img
                                         src={getAssetUrl(design.frontPath)}
@@ -79,7 +79,7 @@ export default function Draft() {
 
                                     <CardFooter>
                                         <Button
-                                            className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-base font-semibold"
+                                            className="w-full bg-brand text-brand-foreground text-base font-semibold"
                                             onClick={() => continueSession(design.sessionId)}
                                         >
                                             Continue Session
@@ -102,7 +102,7 @@ export default function Draft() {
                     </EmptyDescription>
                 </EmptyHeader >
                 <EmptyContent className="flex-row justify-center gap-2">
-                    <Button className='bg-[#319BD9] hover:bg-[#5399fb]'>Create PaperEcash</Button>
+                    <Button className='bg-brand hover:bg-[#5399fb]'>Create PaperEcash</Button>
                 </EmptyContent>
             </Empty >)
             }

@@ -12,7 +12,7 @@ export const labelConfig: Record<
   }
 > = {
   Community: {
-    bg: 'bg-green-50',
+    bg: 'bg-muted',
     text: 'text-green-700',
     hover: 'hover:bg-green-200',
     selected:'bg-green-200',
@@ -20,7 +20,7 @@ export const labelConfig: Record<
     tooltip: 'Community edition',
   },
   Event: {
-    bg: 'bg-sky-50',
+    bg: 'bg-muted',
     text: 'text-sky-700',
     hover: 'hover:bg-sky-200',
     selected:'bg-sky-200',
@@ -28,7 +28,7 @@ export const labelConfig: Record<
     tooltip: 'Bitcoin Event/Summit',
   },
   Gifts: {
-    bg: 'bg-red-50',
+    bg: 'bg-muted',
     text: 'text-red-700',
     hover: 'hover:bg-red-200',
     selected:'bg-red-200',
@@ -36,7 +36,7 @@ export const labelConfig: Record<
     tooltip: 'Gifts & Celebration',
   },
   Cypherpunk: {
-    bg: 'bg-purple-50',
+    bg: 'bg-muted',
     text: 'text-purple-700',
     hover: 'hover:bg-purple-200',
     selected:'bg-purple-200',
@@ -44,7 +44,7 @@ export const labelConfig: Record<
     tooltip: 'Privacy focused',
   },
   Other: {
-    bg: 'bg-gray-50',
+    bg: 'bg-muted',
     text: 'text-gray-700',
     hover: 'hover:bg-gray-200',
     selected:'bg-gray-200',
@@ -52,7 +52,7 @@ export const labelConfig: Record<
     tooltip: 'Other category',
   },
   Regular: {
-    bg: 'bg-yellow-50',
+    bg: 'bg-muted',
     text: 'text-yellow-700',
     hover: 'hover:bg-yellow-200',
     selected:'bg-yellow-200',

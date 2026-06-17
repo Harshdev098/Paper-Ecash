@@ -51,7 +51,9 @@ export default {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+			brand: "hsl(var(--brand))",
+    		"brand-foreground": "hsl(var(--brand-foreground))",
   		},
   		keyframes: {
   			'accordion-down': {

@@ -162,7 +162,7 @@ export default function NoteDenomination() {
                                         ? 'bg-blue-500 border-blue-500 text-white'
                                         : disabled
                                             ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                                            : 'border-blue-400 text-[#4B5971] hover:scale-105 cursor-pointer'
+                                            : 'border-blue-400 text-muted-foreground hover:scale-105 cursor-pointer'
                                     }
                                 `}
                             >
@@ -176,7 +176,7 @@ export default function NoteDenomination() {
             {noteMsats.length > 0 && (
                 <section className="max-w-xl mx-auto mt-5 px-4">
                     <div className="rounded-xl border bg-blue-50 dark:bg-blue-950 p-4 space-y-2">
-                        <p className="text-sm font-semibold text-[#4B5971]">One paper note contains:</p>
+                        <p className="text-sm font-semibold text-muted-foreground">One paper note contains:</p>
                         <div className="flex flex-wrap gap-2">
                             {noteMsats.map((msats, i) => (
                                 <span
@@ -187,7 +187,7 @@ export default function NoteDenomination() {
                                 </span>
                             ))}
                         </div>
-                        <p className="text-sm text-[#4B5971]">
+                        <p className="text-sm text-muted-foreground">
                             Note value: <b className="text-blue-600">{formatMsats(noteTotalMsats)}</b>
                         </p>
                     </div>
@@ -209,7 +209,7 @@ export default function NoteDenomination() {
 
             {noteMsats.length > 0 && (
                 <section className="mt-5 text-center px-4 pb-2">
-                    <p className="text-[#4B5971] text-lg">
+                    <p className="text-muted-foreground text-lg">
                         Total to fund:{' '}
                         <b className="text-blue-500">{totalSats.toFixed(3)} sats</b>
                         <span className="text-sm text-muted-foreground ml-2">(~ ${usdAmount})</span>
@@ -222,7 +222,7 @@ export default function NoteDenomination() {
                     type="button"
                     onClick={saveAndProceed}
                     disabled={noteMsats.length === 0}
-                    className='bg-[#319BD9] hover:bg-[#0e90dc] font-semibold'
+                    className='bg-brand hover:bg-[#0e90dc] font-semibold text-brand-foreground'
                 >
                     Next <i className="fa-solid fa-arrow-right ml-1"></i>
                 </Button>

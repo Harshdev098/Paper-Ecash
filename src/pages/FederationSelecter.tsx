@@ -183,9 +183,9 @@ export default function FederationSelecter() {
                                         </Button>
                                         <Button variant="ghost" size="icon">
                                             {selectedId === fed.id ? (
-                                                <i className="fa-solid fa-circle-check text-sm sm:text-base text-[#4B5971]"></i>
+                                                <i className="fa-solid fa-circle-check text-sm sm:text-base text-muted-foreground"></i>
                                             ) : (
-                                                <i className="fa-solid fa-plus text-sm sm:text-base text-[#4B5971]"></i>
+                                                <i className="fa-solid fa-plus text-sm sm:text-base text-muted-foreground"></i>
                                             )}
                                         </Button>
                                     </ItemActions>
@@ -208,7 +208,7 @@ export default function FederationSelecter() {
                     <Button
                         disabled={isJoining}
                         type="button"
-                        className='bg-[#319BD9] hover:bg-[#0e90dc] font-semibold'
+                        className='bg-brand hover:bg-[#0e90dc] font-semibold text-brand-foreground'
                         onClick={selectFederation}
                     >
                         {isJoining ? "Joining..." : "Next "}

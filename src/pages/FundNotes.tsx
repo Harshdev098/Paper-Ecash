@@ -179,17 +179,17 @@ export default function FundNotes() {
                 </Alert>
 
                 <div className="text-center m-6">
-                    <h3 className="text-xl font-semibold text-[#4B5971]">
+                    <h3 className="text-xl font-semibold text-muted-foreground">
                         Total Fundable Amount:{" "}
                         <b className="text-[#1C6FA7]">{totalSats.toFixed(3)} sats</b>
                     </h3>
-                    <p className="text-sm text-[#4B5563]">~ ${usdAmount}</p>
+                    <p className="text-sm text-muted-foreground">~ ${usdAmount}</p>
                 </div>
 
                 {(invoiceStatus || secondsLeft !== null) && (
                     <div className="flex items-center justify-center gap-3 flex-wrap mx-auto mt-2">
                         {invoiceStatus && (
-                            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-blue-600 bg-blue-50 text-blue-800 text-sm font-medium">
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-blue-600 bg-background text-muted-foreground text-sm font-medium">
                                 <span className="capitalize">{invoiceStatus}</span>
                             </div>
                         )}
@@ -199,10 +199,10 @@ export default function FundNotes() {
                                 flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-mono font-semibold
                                 transition-colors duration-300
                                 ${isExpired
-                                    ? 'border-red-500 bg-red-50 text-red-700'
+                                    ? 'border-red-500 bg-background text-red-700'
                                     : isUrgent
-                                        ? 'border-orange-400 bg-orange-50 text-orange-700'
-                                        : 'border-gray-300 bg-gray-50 text-gray-600'
+                                        ? 'border-orange-400 bg-background text-orange-700'
+                                        : 'border-gray-300 bg-background text-muted-foreground'
                                 }
                             `}>
                                 <i className={`fa-regular fa-clock text-xs ${isUrgent && !isExpired ? 'animate-pulse' : ''}`}></i>
@@ -218,7 +218,7 @@ export default function FundNotes() {
                 {createdInvoice && !isExpired && !(invoiceStatus==='claiming' || invoiceStatus==='claimed') && (
                     <section className="max-w-md mx-auto mt-4 space-y-4 mb-4">
                         <div className="flex flex-col items-center p-6 border rounded-xl bg-white dark:bg-zinc-900 shadow-sm">
-                            <div className="p-4 bg-white rounded-lg border">
+                            <div className="p-4 bg-background rounded-lg border">
                                 <QRCode value={createdInvoice} size={160} bgColor="white" fgColor="black" />
                             </div>
                             <p className="text-sm text-muted-foreground text-center mt-4">
@@ -231,7 +231,7 @@ export default function FundNotes() {
                                         {createdInvoice.slice(0, 50)}...
                                     </span>
                                     <button
-                                        className="px-2 py-1 text-xs rounded bg-primary text-primary-foreground hover:opacity-90"
+                                        className="px-2 py-1 text-xs rounded bg-background text-muted-foreground hover:opacity-90"
                                         onClick={() => navigator.clipboard.writeText(createdInvoice)}
                                     >
                                         Copy
@@ -240,7 +240,7 @@ export default function FundNotes() {
                             </div>
                         </div>
                         <Button
-                            className="w-full mt-3"
+                            className="w-full mt-3 bg-brand text-brand-foreground"
                             onClick={() => { window.location.href = `lightning:${createdInvoice}` }}
                         >
                             Open in Wallet <i className="fa-solid fa-bolt"></i>
@@ -262,11 +262,11 @@ export default function FundNotes() {
                 )}
 
                 <DrawerFooter>
-                    {!(invoiceStatus==='claiming' || invoiceStatus==='claimed') && <Button variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>
+                    {!(invoiceStatus==='claiming' || invoiceStatus==='claimed') && <Button className="bg-brand text-brand-foreground" variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>
                         Back
                     </Button>}
                     <p
-                        className="p-1 m-2 text-[#4B5971] text-sm text-center font-semibold cursor-pointer"
+                        className="p-1 m-2 text-muted-foreground text-sm text-center font-semibold cursor-pointer"
                         onClick={getPaymentStatus}
                     >
                         Already Paid? Check payment status manually

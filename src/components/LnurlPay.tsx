@@ -55,7 +55,7 @@ export default function LnurlPay({ open, onClose, address, designerName }: Lnurl
                 <DialogFooter className="flex-col gap-2 sm:flex-col">
                     <Button
                         type="button"
-                        className="w-full bg-[#319BD9] hover:bg-[#0e90dc] font-semibold"
+                        className="w-full bg-brand hover:bg-[#0e90dc] font-semibold"
                         onClick={() => { window.location.href = `lightning:${address}` }}
                     >
                         <i className="fa-solid fa-bolt mr-2"></i>

@@ -69,7 +69,7 @@ export default function Builds() {
 
                                     <CardFooter className='flex flex-col gap-1'>
                                         <Button
-                                            className="w-full bg-[#319BD9] hover:bg-[#5399fb] text-base font-semibold"
+                                            className="w-full bg-brand text-brand-foreground hover:bg-[#5399fb] text-base font-semibold"
                                             onClick={() => {
                                                 searchParams.set("id", design.sessionId)
                                                 setSearchParams(searchParams)
@@ -94,7 +94,7 @@ export default function Builds() {
                     </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent className="flex-row justify-center gap-2">
-                    <Button className='bg-[#319BD9] hover:bg-[#5399fb]'>Create PaperEcash</Button>
+                    <Button className='bg-brand hover:bg-[#5399fb]'>Create PaperEcash</Button>
                 </EmptyContent>
             </Empty>)
             }
