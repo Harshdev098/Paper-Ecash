@@ -206,7 +206,7 @@ export default function DownloadPDF() {
                         </Button>
                         <Button
                             type="button"
-                            className="bg-white border border-bg-brand-foreground hover:bg-white text-bg-brand-foreground text-base font-semibold"
+                            className="bg-white border border-bg-brand-foreground hover:bg-white text-brand-foreground text-base font-semibold"
                             onClick={() => setReclaimWindow(!reclaimWindow)}
                         >
                             <i className="fa-solid fa-rotate-left"></i> Reclaim Ecash Notes

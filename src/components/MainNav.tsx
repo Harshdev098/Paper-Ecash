@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import PaperMintLogo from '../assets/PaperMintLogoBlack.png'
+import PaperMintLogoBlack from '../assets/PaperMintLogoBlack.png'
+import PaperMintLogo from '../assets/PaperMintLogo.png'
 import { Button } from './ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from 'next-themes'
@@ -12,7 +13,7 @@ export default function MainNav() {
     return (
         <nav className='w-full px-6 md:px-10 py-3 bg-background shadow-md'>
             <div className='flex justify-between items-center'>
-                <img src={PaperMintLogo} alt="PaperMint Logo" width="140px" onClick={() => navigate('/')} />
+                <img src={theme==='dark' ? PaperMintLogo : PaperMintLogoBlack} alt="PaperMint Logo" width="140px" onClick={() => navigate('/')} />
 
                 <ul className='hidden md:flex items-center font-medium text-[18px]'>
                     <li>
@@ -27,9 +28,9 @@ export default function MainNav() {
                         }
                     >
                         {theme === "dark" ? (
-                            <i className="fa-solid fa-moon text-2xl ml-3"></i>
+                            <i className="fa-solid fa-moon text-2xl ml-3 cursor-pointer"></i>
                         ) : (
-                            <i className="fa-solid fa-sun text-2xl ml-3"></i>
+                            <i className="fa-solid fa-sun text-2xl ml-3 cursor-pointer"></i>
                         )}
                     </li>
                 </ul>

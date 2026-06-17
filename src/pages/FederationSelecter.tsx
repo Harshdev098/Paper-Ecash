@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '@/redux/store'
 import { setWalletStatus } from '@/redux/slices/WalletSlice'
 import { updateSessionThunk } from '@/redux/slices/SessionSlice'
-import { generateMnemonic, getMnemonic, joinFederation, listClients, getWallet, parseInviteCode } from '@fedimint/core-web'
+import { generateMnemonic, getMnemonic, joinFederation, listClients, getWallet, parseInviteCode, getWalletInfo } from '@fedimint/core-web'
 import { fetchFormatedFederation } from '@/services/Federation'
 import type { FormatedFederationData } from '@/types/fedimint.type'
 import { setLoader } from '@/redux/slices/LoaderSlice'
@@ -26,6 +26,11 @@ export default function FederationSelecter() {
     const { sessionId } = useSelector((state: RootState) => state.SessionSlice)
     const { loader, loaderMessage } = useSelector((state: RootState) => state.LoaderSlice)
     const [federationList, setFederationList] = useState<FormatedFederationData[] | null>(null)
+    const [lastUsedFederation, setLastUsedFederation] = useState<{
+        federationId: string,
+        name: string | null,
+        inviteCode: string
+    } | null>(null)
 
     useEffect(() => {
         const fetchFederations = async () => {
@@ -43,6 +48,28 @@ export default function FederationSelecter() {
             }
         }
         fetchFederations()
+    }, [])
+
+    useEffect(() => {
+        const loadLastFederation = async () => {
+            const walletId = localStorage.getItem("lastWallet")
+            if (!walletId) return
+
+            const walletInfo = getWalletInfo(walletId)
+            if (!walletInfo) return
+
+            try {
+                const federation = await fetchFormatedFederation(walletInfo.federationId)
+                if (federation?.length > 0) {
+                    let data = { federationId: federation[0].id, name: federation[0].name, inviteCode: federation[0].invite }
+                    setLastUsedFederation(data)
+                }
+            } catch (err) {
+                console.error(err)
+            }
+        }
+
+        loadLastFederation()
     }, [])
 
     const getOrJoinFederation = async (inviteCode: string): Promise<{
@@ -97,6 +124,7 @@ export default function FederationSelecter() {
             const { walletId, federationId } = await getOrJoinFederation(inviteCode)
 
             console.log(`resolved walletId: ${walletId}, federationId: ${federationId}`)
+            localStorage.setItem('lastWallet', walletId);
             dispatch(setWalletStatus('opened'))
             dispatch(updateSessionThunk({ federationId, walletId }))
 
@@ -136,6 +164,72 @@ export default function FederationSelecter() {
                 </div>
 
                 <h4 className="text-center text-sm text-muted-foreground">OR</h4>
+
+                {lastUsedFederation && (
+                    <div className="w-full sm:w-[95%] mx-auto">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">
+                            Recently Used
+                        </p>
+
+                        <Item
+                            variant="outline"
+                            className={`cursor-pointer p-3 transition-all ${selectedId === lastUsedFederation.federationId
+                                ? "border-blue-600"
+                                : ""
+                                }`}
+                            onClick={() => {
+                                setSelectedId(
+                                    selectedId === lastUsedFederation.federationId
+                                        ? null
+                                        : lastUsedFederation.federationId
+                                )
+
+                                setInviteCode(
+                                    selectedId === lastUsedFederation.federationId
+                                        ? null
+                                        : lastUsedFederation.inviteCode
+                                )
+                            }}
+                        >
+                            <div className="flex items-center gap-3 w-full min-w-0">
+                                <Avatar className="shrink-0">
+                                    <AvatarFallback>
+                                        {lastUsedFederation.name?.[0] ?? "F"}
+                                    </AvatarFallback>
+                                </Avatar>
+
+                                <ItemContent className="min-w-0 flex-1">
+                                    <ItemTitle className="flex items-center gap-2 flex-wrap">
+                                        <span className="truncate">
+                                            {lastUsedFederation.name ??
+                                                lastUsedFederation.federationId}
+                                        </span>
+                                    </ItemTitle>
+
+                                    <ItemDescription className="truncate text-xs sm:text-sm text-muted-foreground">
+                                        {lastUsedFederation.federationId}
+                                    </ItemDescription>
+                                </ItemContent>
+
+                                <ItemActions className="shrink-0">
+                                    {selectedId === lastUsedFederation.federationId ? (
+                                        <i className="fa-solid fa-circle-check text-blue-600" />
+                                    ) : (
+                                        <i className="fa-solid fa-clock-rotate-left text-muted-foreground" />
+                                    )}
+                                </ItemActions>
+                            </div>
+                        </Item>
+                    </div>
+                )}
+
+                <div className="flex items-center gap-3 w-full sm:w-[95%] mx-auto mb-3">
+                    <div className="flex-1 border-t" />
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                        Recommended Federations
+                    </span>
+                    <div className="flex-1 border-t" />
+                </div>
 
                 <div className="flex flex-col gap-2 pt-0 w-full">
                     <ItemGroup className="w-full sm:w-[95%] mx-auto max-h-[220px] overflow-y-auto space-y-2">
