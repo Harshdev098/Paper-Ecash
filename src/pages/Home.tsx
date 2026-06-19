@@ -12,6 +12,7 @@ import FundNotes from '@/assets/FundNotes.png'
 import NoteDenomination from '@/assets/NoteDenomination.png'
 import SelectDesign from '@/assets/SelectDesign.png'
 import SelectFederation from '@/assets/SelectFederation.png'
+import DownloadNote from '@/assets/DownloadNote.png'
 
 
 const steps = [
@@ -48,7 +49,7 @@ const steps = [
     title: "Download Printable PDF",
     description:
       "Receive a high-resolution, print-safe PDF containing beautifully designed paper ecash notes.",
-    image: `${FundNotes}`,
+    image: `${DownloadNote}`,
   },
 ];
 

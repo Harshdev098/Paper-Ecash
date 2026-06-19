@@ -1,4 +1,4 @@
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from './ui/empty'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from './ui/empty'
 import { Button } from './ui/button'
 import { useMemo, useState } from 'react'
 import { extractDesingListFromSession, filterDraftSessions } from '@/services/SessionControl'
@@ -101,9 +101,6 @@ export default function Draft() {
                         your first paper ecash.
                     </EmptyDescription>
                 </EmptyHeader >
-                <EmptyContent className="flex-row justify-center gap-2">
-                    <Button className='bg-brand hover:bg-[#5399fb]'>Create PaperEcash</Button>
-                </EmptyContent>
             </Empty >)
             }
         </>

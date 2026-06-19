@@ -6,6 +6,26 @@ html, body {
   overflow-x: hidden;
 }
 
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3);
+}
+
+
 @layer base {
   :root {
     --background: 0 0% 94%;

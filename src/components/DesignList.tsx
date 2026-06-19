@@ -46,6 +46,7 @@ export default function DesignList({ filteredDesigns }: { filteredDesigns: Desig
                                     src={getAssetUrl(design.frontPath)}
                                     alt={design.DesignName}
                                     className="aspect-video w-full object-cover"
+                                    loading='lazy'
                                 />
 
                                 <CardHeader>

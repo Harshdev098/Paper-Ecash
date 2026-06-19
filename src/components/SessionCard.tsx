@@ -6,6 +6,7 @@ import { useSelector } from "react-redux"
 import type { RootState } from "@/redux/store"
 import { FedimintManagerProvider } from "@/context/FedimintManager"
 import DownloadPDF from "@/pages/DownloadPDF"
+import { useEffect } from "react"
 
 interface SessionCardProps {
   open: boolean
@@ -14,6 +15,18 @@ interface SessionCardProps {
 
 export default function SessionCard({ open, onClose }: SessionCardProps) {
   const { currentStep, sessionId } = useSelector((state: RootState) => state.SessionSlice)
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [open])
 
   const STEPS: Record<number, React.ReactNode> = {
     1: <FederationSelecter />,
