@@ -215,12 +215,15 @@ export default function FundNotes() {
                     </div>
                 )}
 
-                {createdInvoice && !isExpired && !(invoiceStatus==='claiming' || invoiceStatus==='claimed') && (
+                {createdInvoice && !isExpired && !(invoiceStatus === 'claiming' || invoiceStatus === 'claimed') && (
                     <section className="max-w-md mx-auto mt-4 space-y-4 mb-4">
                         <div className="flex flex-col items-center p-6 border rounded-xl bg-white dark:bg-zinc-900 shadow-sm">
                             <div className="p-4 bg-background rounded-lg border">
                                 <QRCode value={createdInvoice} size={160} bgColor="white" fgColor="black" />
                             </div>
+                            <span data-testid="lightning-invoice" className="sr-only">
+                                {createdInvoice}
+                            </span>
                             <p className="text-sm text-muted-foreground text-center mt-4">
                                 Scan this QR code with your wallet to fund the notes
                             </p>
@@ -262,7 +265,7 @@ export default function FundNotes() {
                 )}
 
                 <DrawerFooter>
-                    {!(invoiceStatus==='claiming' || invoiceStatus==='claimed') && <Button className="bg-brand text-brand-foreground" variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>
+                    {!(invoiceStatus === 'claiming' || invoiceStatus === 'claimed') && <Button className="bg-brand text-brand-foreground" variant='outline' onClick={() => BackToStep(dispatch, currentStep)}>
                         Back
                     </Button>}
                     <p
