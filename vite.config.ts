@@ -1,6 +1,6 @@
 import path from "path"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig } from "vitest/config"
 import wasm from "vite-plugin-wasm"
 
 export default defineConfig({
@@ -9,6 +9,17 @@ export default defineConfig({
     target: 'esnext'
   },
   plugins: [react(), wasm()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/tests/unit/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['src/utils/**', 'src/services/**', 'src/components/**'],
+      exclude: ['src/**/*.d.ts'],
+    },
+  },
   assetsInclude: ["**/*.wasm"],
   resolve: {
     alias: {
