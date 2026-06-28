@@ -1,0 +1,61 @@
+name: Tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Lint
+        run: npm run lint
+
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Unit Tests
+        run: npm test
+
+      # - name: Setup Nix
+      #   uses: ./.github/actions/setup-nix
+
+      # - name: Build WASM
+      #   uses: ./.github/actions/build-wasm
+
+      # - name: Run e2e tests
+      #   shell: bash
+      #   run: |
+      #     nix develop --accept-flake-config .#wasm-tests --command bash << 'EOF'
+      #       set -euo pipefail
+      #       npm run test:e2e
+      #     EOF
