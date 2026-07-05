@@ -9,41 +9,36 @@ import DownloadPDF from "@/pages/DownloadPDF"
 import { useEffect } from "react"
 
 interface SessionCardProps {
-  open: boolean
-  onClose: (open: boolean) => void
+    open: boolean
+    onClose: (open: boolean) => void
 }
 
 export default function SessionCard({ open, onClose }: SessionCardProps) {
-  const { currentStep, sessionId } = useSelector((state: RootState) => state.SessionSlice)
+    const { currentStep, sessionId } = useSelector((state: RootState) => state.SessionSlice)
 
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = ""
+    useEffect(() => {
+        document.body.style.overflow = open ? "hidden" : ""
+        return () => { document.body.style.overflow = "" }
+    }, [open])
+
+    const STEPS: Record<number, React.ReactNode> = {
+        1: <FederationSelecter />,
+        2: <NoteDenomination />,
+        3: <FundNotes />,
+        4: <DownloadPDF />,
     }
 
-    return () => {
-      document.body.style.overflow = ""
-    }
-  }, [open])
+    const step = STEPS[currentStep]
 
-  const STEPS: Record<number, React.ReactNode> = {
-    1: <FederationSelecter />,
-    2: <NoteDenomination />,
-    3: <FundNotes />,
-    4: <DownloadPDF />
-  }
-
-  return (
-    <FedimintManagerProvider key={sessionId ?? 'no-session'}>
-      <Drawer open={open} onOpenChange={onClose}>
-        <DrawerContent className="w-full rounded-2xl max-h-[80vh] flex flex-col">
-          <div className="flex-1 overflow-y-auto relative">
-            {STEPS[currentStep]}
-          </div>
-        </DrawerContent>
-      </Drawer>
-    </FedimintManagerProvider>
-  )
+    return (
+        <FedimintManagerProvider key={sessionId ?? 'no-session'}>
+            <Drawer open={open && !!step} onOpenChange={onClose}>
+                <DrawerContent className="w-full rounded-2xl max-h-[80vh] flex flex-col">
+                    <div className="flex-1 overflow-y-auto relative">
+                        {step ?? null}
+                    </div>
+                </DrawerContent>
+            </Drawer>
+        </FedimintManagerProvider>
+    )
 }

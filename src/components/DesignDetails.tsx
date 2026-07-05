@@ -20,9 +20,9 @@ interface DesignCardProps {
 export default function DesignDetails({ open, onClose }: DesignCardProps) {
     const choosenDesign = useSelector((state: RootState) => state.choosenDesign)
     const [searchParams, setSearchParams] = useSearchParams()
-    const [openLnurl,setOpenLnurl]=useState<boolean>(false)
-    const [lnurlAddress,setLnurlAddress]=useState<string | null>(null)
-    const [designerName,setDesignerName]=useState<string>("")
+    const [openLnurl, setOpenLnurl] = useState<boolean>(false)
+    const [lnurlAddress, setLnurlAddress] = useState<string | null>(null)
+    const [designerName, setDesignerName] = useState<string>("")
     const dispatch = useDispatch<AppDispatch>()
 
     const createNewSession = () => {
@@ -43,12 +43,12 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
 
     const startSession = async () => {
         const draftSession = await searchDesignsInDraft(choosenDesign?.id)
-        onClose(false)
         if (!draftSession) {
             createNewSession()
         } else {
             continueDraftSession(draftSession)
         }
+        onClose(false)
     }
 
     const handleClose = (open: boolean) => {
@@ -58,7 +58,7 @@ export default function DesignDetails({ open, onClose }: DesignCardProps) {
         }
     }
 
-    const setPrompts=()=>{
+    const setPrompts = () => {
         setOpenLnurl(true);
         setLnurlAddress(choosenDesign?.lnurl ?? null);
         setDesignerName(choosenDesign?.designer ?? '')
