@@ -9,7 +9,6 @@ export async function checkNotesRedemption(
     wallet: Wallet
 ): Promise<RedemptionResult> {
     const ecashData = await getEcashNoteData(sessionId)
-                console.log("the ecash data is :",ecashData)
     if (!ecashData?.encryptedTokens) {
         throw new Error('No ecash data found. The 24-hour reclaim window may have expired.')
     }
@@ -29,7 +28,6 @@ export async function checkNotesRedemption(
     for (let i = 0; i < tokens.length; i++) {
         try {
             const decoded = await wallet.mint.decodeNotes(tokens[i])
-            console.log("the decoded notes are ",decoded)
             const nonces: string[] = []
             if (decoded?.notes) {
                 for (const nonceList of Object.values(decoded.notes as Record<string, string[]>)) {
@@ -41,9 +39,7 @@ export async function checkNotesRedemption(
             tokenNonces.push({ tokenIndex: i, nonces: [] })
         }
     }
-    console.log("the decoded nonces are ",tokenNonces)
     const allNonces = tokenNonces.flatMap(t => t.nonces)
-    console.log("teh all nonces are ",allNonces)
     let spentMap: SpendCheckResponse = {}
 
     if (allNonces.length > 0) {

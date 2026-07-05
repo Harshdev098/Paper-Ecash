@@ -11,19 +11,12 @@ export default function Navbar() {
         <nav className='w-full px-6 md:px-10 py-6'>
             <div className='flex justify-between items-center'>
 
-                {/* Logo */}
                 <img src={PaperMintLogo} alt="PaperMint Logo" width="140px" />
 
-                {/* Desktop Menu */}
                 <ul className='hidden md:flex items-center font-medium text-[18px]'>
                     <li>
                         <Link to="/" className='px-3 py-2 mx-3 text-white hover:border-b-2 border-[#7592BB]'>
                             <i className="fa-solid fa-house px-4"></i> Home
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/about" className='px-3 py-2 mx-3 text-white hover:border-b-2 border-[#7592BB]'>
-                            <i className="fa-solid fa-question px-4"></i> Why PaperEcash
                         </Link>
                     </li>
                     <li>
@@ -41,7 +34,6 @@ export default function Navbar() {
                     </li>
                 </ul>
 
-                {/* Hamburger Button */}
                 <button
                     className='md:hidden text-white'
                     onClick={() => setIsOpen(!isOpen)}
@@ -72,7 +64,6 @@ export default function Navbar() {
                 </button>
             </div>
 
-            {/* Mobile Menu */}
             {isOpen && (
                 <div className='md:hidden mt-4 flex flex-col items-center bg-[#1e293b] rounded-lg py-4 space-y-4 text-white'>
                     <Link to="/" onClick={() => setIsOpen(false)}>Home</Link>

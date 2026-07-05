@@ -414,11 +414,9 @@ export async function generateNotesPDF(
         if (!mnemonic?.length) throw new Error("Wallet mnemonic not found, cannot create reclaim")
 
         const existing = await getEcashNoteData(sessionId)
-        console.log("existing ecash notes data", existing)
         if (existing?.encryptedTokens) {
             tokenArray = await decryptTokens(existing?.encryptedTokens, mnemonic)
         }
-        console.log("the existing token array", tokenArray);
 
         const remaining = noteCount - tokenArray.length
         console.log("the remaining count for which to generate the ecash ", remaining)

@@ -34,7 +34,7 @@ export default function DownloadPDF() {
     const [reclaimWindow, setReclaimWindow] = useState<boolean>(false)
     const [openLnurl, setOpenLnurl] = useState<boolean>(false)
     const [includeTamperRegion, setIncludeTamperRegion] = useState<boolean>(false);
-    const [downloading,setDownloading]=useState<boolean>(false)
+    const [downloading, setDownloading] = useState<boolean>(false)
 
     const design = useMemo(() => {
         if (!designId) return null;
@@ -47,7 +47,6 @@ export default function DownloadPDF() {
             try {
                 dispatch(setLoader({ loader: true, loaderMessage: "Loading denomination" }))
                 const saved = await getNotesData(sessionId)
-                console.log("the saved notes data are", saved)
                 if (saved) {
                     setNoteMsats(saved.noteMsats ?? [])
                     setNoteCount(saved.noteCount ?? 1)
@@ -64,7 +63,6 @@ export default function DownloadPDF() {
     useEffect(() => {
         const getUSDAmount = async () => {
             try {
-            (window as any).wallet=wallet
                 const usdValue = await convertFromSat(totalSats)
                 setUSDAmount(usdValue)
             } catch (err) {
@@ -112,7 +110,7 @@ export default function DownloadPDF() {
                 {design && (
                     <PreviewDesign
                         design={design}
-                        noteTotalMsats={Number((noteTotalMsats/1000).toFixed(2))}
+                        noteTotalMsats={Number((noteTotalMsats / 1000).toFixed(2))}
                         showTamperRegion={includeTamperRegion}
                         onColorsResolved={(colors) => {
                             setQrColors({ fg: colors.fg, bg: colors.bg })

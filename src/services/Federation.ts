@@ -107,44 +107,59 @@ export const searchInvoiceForOperation = async (wallet: Wallet, operationId: str
     }
 }
 
-export const getEcashToken = async (wallet: Wallet, noteMsats: number[]) => {
-    try {
-        console.log(`spending exact denominations:`, noteMsats)
+export const getEcashToken = async (wallet: Wallet, noteMsats: number[]): Promise<string> => {
+    const operationId = await wallet.mint.spendExactDenominationNotes(noteMsats, Number.MAX_SAFE_INTEGER);
+    console.log("the spend exact operation id is ", operationId)
 
-        const token = await wallet.mint.spendExactDenominationNotes(noteMsats, Number.MAX_SAFE_INTEGER)
-        return token;
-    } catch (err) {
-        if (err instanceof Error) {
-            throw new Error(`Federation error occurred: ${err.message}`);
-        } else {
-            throw new Error(`Federation error occurred: ${String(err)}`);
-        }
-    }
-}
+    return new Promise((resolve, reject) => {
+        const unsubscribe = wallet.mint.subscribeSpendExactNotes(
+            operationId,
+            false,
+            (state: string) => {
+                console.log("the token is ", state)
+                resolve(state)
+            },
+            (err) => {
+                unsubscribe();
+                reject(err);
+            }
+        );
+        setTimeout(() => {
+            unsubscribe()
+        }, 10000)
+    });
+};
 
 const fetchExchangeRates = async () => {
     try {
         const res = await fetch(
-            'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
+            "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
         );
+
         const data = await res.json();
-        if (data) {
-            localStorage.setItem('usdRate', data.bitcoin.usd);
+        const usd = data?.bitcoin?.usd;
+
+        if (typeof usd === "number") {
+            localStorage.setItem("usdRate", usd.toString());
+            return { usd };
         }
-        return {
-            usd: data.bitcoin.usd ?? localStorage.getItem('usdRate'),
-        };
     } catch (err) {
-        console.log('an error occured while fetching exchange rates', err);
-        const fallback = localStorage.getItem('usdRate');
-        return { usd: Number(fallback) };
+        console.error("Error fetching exchange rates:", err);
     }
+
+    const fallback = localStorage.getItem("usdRate");
+    return {
+        usd: fallback ? Number(fallback) : null,
+    };
 };
 
 export const convertFromSat = async (sats: number): Promise<number> => {
     const btcValue = sats / SATS_PER_BTC;
-    const rates = await fetchExchangeRates();
-    console.log("the rates are ", rates)
+    const { usd } = await fetchExchangeRates();
 
-    return Number((btcValue * (rates?.usd || localStorage.getItem('usdRate'))).toFixed(4));
+    if (usd == null) {
+        throw new Error("No exchange rate available.");
+    }
+
+    return Number((btcValue * usd).toFixed(4));
 };

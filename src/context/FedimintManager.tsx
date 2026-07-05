@@ -35,7 +35,9 @@ export const FedimintManagerProvider: React.FC<{ children: React.ReactNode }> = 
 
         try {
             dispatch(setWalletStatus('opening'))
-            setLogLevel('debug')
+            if (import.meta.env.DEV) {
+                setLogLevel("debug")
+            }
 
             const walletList = listClients()
             console.log("known wallet clients:", walletList)

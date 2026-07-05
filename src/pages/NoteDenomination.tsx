@@ -91,7 +91,7 @@ export default function NoteDenomination() {
         if (totalSats === 0) return
         convertFromSat(totalSats)
             .then(setUsdAmount)
-            .catch(err => console.log("[NoteDenomination] USD conversion error:", err))
+            .catch(err => console.log("USD conversion error:", err))
     }, [totalSats])
 
     const formatMsats = (msats: number) => {
